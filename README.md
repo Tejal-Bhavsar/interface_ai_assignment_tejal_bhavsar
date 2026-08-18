@@ -271,8 +271,13 @@ source .venv/bin/activate
 
 export CUA_LLM_PROVIDER=gemini
 
+export GEMINI_API_KEY="<your-gemini-api-key>"
+export CUA_LLM_PROVIDER=gemini
 python -m scripts.smoke_compile
 ```
+GEMINI_API_KEY is required only for a new live discovery run.
+Do not commit API keys. The committed capability and all deterministic
+replay steps can be verified without a live model API.
 
 Also export the API-key environment variable configured for the selected provider in `config/llm.json`.
 
