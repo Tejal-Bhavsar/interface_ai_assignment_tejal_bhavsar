@@ -1,0 +1,40 @@
+{
+  "capability_id": "lookup_savings_balance",
+  "capability_version": "1.0.0",
+  "checkpoint_passed": false,
+  "failed_step_id": null,
+  "human_actions": [],
+  "human_intervention_count": 0,
+  "human_resume_attempt_count": 0,
+  "message": "Replay ended with a known business outcome.",
+  "outputs": {},
+  "recovery_count": 0,
+  "runtime_state": {
+    "code": "MEMBER_NOT_FOUND",
+    "kind": "business_outcome",
+    "matched_text": "Member not found",
+    "message": "No member exists for the supplied identifier.",
+    "recovery_action": null,
+    "recovery_attempt": 0,
+    "recovery_max_attempts": null
+  },
+  "status": "business_outcome",
+  "steps": [
+    {
+      "action": "fill",
+      "message": null,
+      "output_name": null,
+      "status": "completed",
+      "step_id": "step_01_fill_member_id_textbox",
+      "url": "http://127.0.0.1:8000/legacy"
+    },
+    {
+      "action": "click",
+      "message": "No member exists for the supplied identifier.",
+      "output_name": null,
+      "status": "business_outcome",
+      "step_id": "step_02_click_search_button",
+      "url": "http://127.0.0.1:8000/legacy/member/[REDACTED]"
+    }
+  ]
+}

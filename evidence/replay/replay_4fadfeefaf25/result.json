@@ -1,0 +1,62 @@
+{
+  "capability_id": "lookup_savings_balance",
+  "capability_version": "1.0.0",
+  "checkpoint_passed": true,
+  "failed_step_id": null,
+  "human_actions": [
+    {
+      "accessible_name": null,
+      "event_type": "click",
+      "href": null,
+      "role": null,
+      "tag": "button",
+      "text": "Acknowledge & Continue",
+      "timestamp": "2026-08-18T19:17:26.854Z",
+      "url": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings",
+      "value": null
+    }
+  ],
+  "human_intervention_count": 1,
+  "human_resume_attempt_count": 1,
+  "message": "Capability replay completed successfully.",
+  "outputs": {
+    "current_savings_balance": "[REDACTED]"
+  },
+  "recovery_count": 0,
+  "runtime_state": null,
+  "status": "completed",
+  "steps": [
+    {
+      "action": "fill",
+      "message": null,
+      "output_name": null,
+      "status": "completed",
+      "step_id": "step_01_fill_member_id_textbox",
+      "url": "http://127.0.0.1:8000/legacy"
+    },
+    {
+      "action": "click",
+      "message": null,
+      "output_name": null,
+      "status": "completed",
+      "step_id": "step_02_click_search_button",
+      "url": "http://127.0.0.1:8000/legacy/member/[REDACTED]"
+    },
+    {
+      "action": "click",
+      "message": null,
+      "output_name": null,
+      "status": "completed",
+      "step_id": "step_03_click_savings_link",
+      "url": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings"
+    },
+    {
+      "action": "extract",
+      "message": null,
+      "output_name": "current_savings_balance",
+      "status": "completed",
+      "step_id": "step_04_extract_current_savings_balance",
+      "url": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "entry_url": "http://127.0.0.1:8000/legacy",
+  "evidence_policy": {
+    "observation_fingerprint_persisted": true,
+    "raw_model_response_persisted": false,
+    "raw_visible_text_persisted": false,
+    "sensitive_values_redacted": true
+  },
+  "goal": "Look up member [REDACTED] and return the current savings balance. Extract the balance using the output name 'current_savings_balance'.",
+  "inputs": {
+    "member_id": "[REDACTED]"
+  },
+  "model": "gemini-2.5-flash",
+  "provider": "gemini",
+  "run_id": "disc_22b2281984ae",
+  "schema_version": "1.0"
+}

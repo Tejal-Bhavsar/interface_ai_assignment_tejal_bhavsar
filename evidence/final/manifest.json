@@ -1,0 +1,112 @@
+{
+  "agent_api": {
+    "artifact_discovery_run_id": "disc_22b2281984ae",
+    "artifact_integrity_sha256": "cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5",
+    "checkpoint_passed": true,
+    "has_screenshot": false,
+    "has_structure_snapshot": false,
+    "human_operator_ids": [],
+    "llm_decision_events_detected": 0,
+    "recovery_count": 0,
+    "run_id": "replay_acf52073349e",
+    "runtime_state_code": null,
+    "source": "/Users/Sarvadnya/Documents/interface_ai_assignment_tejal_bhavsar/evidence/agent_api/replay_acf52073349e",
+    "status": "completed"
+  },
+  "business_outcome": {
+    "artifact_discovery_run_id": "disc_22b2281984ae",
+    "artifact_integrity_sha256": "cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5",
+    "checkpoint_passed": false,
+    "has_screenshot": false,
+    "has_structure_snapshot": false,
+    "human_operator_ids": [],
+    "llm_decision_events_detected": 0,
+    "recovery_count": 0,
+    "run_id": "replay_4647a6ff59f6",
+    "runtime_state_code": "MEMBER_NOT_FOUND",
+    "source": "/Users/Sarvadnya/Documents/interface_ai_assignment_tejal_bhavsar/evidence/agent_api/replay_4647a6ff59f6",
+    "status": "business_outcome"
+  },
+  "discovery": {
+    "genuine_non_mock": true,
+    "model": "gemini-2.5-flash",
+    "provider": "gemini",
+    "run_id": "disc_22b2281984ae",
+    "source": "/Users/Sarvadnya/Documents/interface_ai_assignment_tejal_bhavsar/evidence/discovery/disc_22b2281984ae"
+  },
+  "hard_failure": {
+    "artifact_discovery_run_id": "disc_22b2281984ae",
+    "artifact_integrity_sha256": "cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5",
+    "checkpoint_passed": false,
+    "has_screenshot": true,
+    "has_structure_snapshot": true,
+    "human_operator_ids": [],
+    "llm_decision_events_detected": 0,
+    "recovery_count": 0,
+    "run_id": "replay_530635599c3d",
+    "runtime_state_code": "PERMISSION_DENIED",
+    "source": "/Users/Sarvadnya/Documents/interface_ai_assignment_tejal_bhavsar/evidence/replay/replay_530635599c3d",
+    "status": "failed"
+  },
+  "human_handoff": {
+    "artifact_discovery_run_id": "disc_22b2281984ae",
+    "artifact_integrity_sha256": "cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5",
+    "checkpoint_passed": true,
+    "has_screenshot": true,
+    "has_structure_snapshot": true,
+    "human_operator_ids": [
+      "local-human-operator"
+    ],
+    "llm_decision_events_detected": 0,
+    "recovery_count": 0,
+    "run_id": "replay_2d8ca6b9db94",
+    "runtime_state_code": null,
+    "source": "/Users/Sarvadnya/Documents/interface_ai_assignment_tejal_bhavsar/evidence/replay/replay_2d8ca6b9db94",
+    "status": "completed"
+  },
+  "missing_requirements": [],
+  "policy": {
+    "artifact_discovery_run_id": "disc_22b2281984ae",
+    "artifact_integrity_sha256": "ca9a4a961cf48da0f3a9870976556ffb8c4c6766bce11ffd8735ef30d1999917",
+    "checkpoint_passed": false,
+    "has_screenshot": true,
+    "has_structure_snapshot": true,
+    "human_operator_ids": [],
+    "llm_decision_events_detected": 0,
+    "recovery_count": 0,
+    "run_id": "replay_7999ad388fd5",
+    "runtime_state_code": "POLICY_HUMAN_REQUIRED",
+    "source": "/Users/Sarvadnya/Documents/interface_ai_assignment_tejal_bhavsar/evidence/policy/replay_7999ad388fd5",
+    "status": "human_required"
+  },
+  "purpose": "Curated reviewer-facing evidence for the computer-use automation vertical slice.",
+  "recovery": {
+    "artifact_discovery_run_id": "disc_22b2281984ae",
+    "artifact_integrity_sha256": "cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5",
+    "checkpoint_passed": true,
+    "has_screenshot": false,
+    "has_structure_snapshot": false,
+    "human_operator_ids": [],
+    "llm_decision_events_detected": 0,
+    "recovery_count": 1,
+    "run_id": "replay_b4775e61a9d5",
+    "runtime_state_code": null,
+    "source": "/Users/Sarvadnya/Documents/interface_ai_assignment_tejal_bhavsar/evidence/replay/replay_b4775e61a9d5",
+    "status": "completed"
+  },
+  "replay_success": {
+    "artifact_discovery_run_id": "disc_22b2281984ae",
+    "artifact_integrity_sha256": "cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5",
+    "checkpoint_passed": true,
+    "has_screenshot": false,
+    "has_structure_snapshot": false,
+    "human_operator_ids": [],
+    "llm_decision_events_detected": 0,
+    "recovery_count": 0,
+    "run_id": "replay_b5da39f38b05",
+    "runtime_state_code": null,
+    "source": "/Users/Sarvadnya/Documents/interface_ai_assignment_tejal_bhavsar/evidence/replay/replay_b5da39f38b05",
+    "status": "completed"
+  },
+  "schema_version": "1.0"
+}

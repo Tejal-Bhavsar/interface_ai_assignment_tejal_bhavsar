@@ -1,0 +1,12 @@
+{
+  "approval_state": "draft",
+  "artifact_integrity_sha256": "cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5",
+  "capability_id": "lookup_savings_balance",
+  "capability_version": "1.0.0",
+  "entry_url": "http://127.0.0.1:8000/legacy",
+  "inputs": {
+    "member_id": "[REDACTED]"
+  },
+  "run_id": "replay_530635599c3d",
+  "started_at": "2026-08-18T21:04:09.854224+00:00"
+}

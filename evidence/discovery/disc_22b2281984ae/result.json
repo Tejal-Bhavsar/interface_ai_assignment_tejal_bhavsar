@@ -1,0 +1,226 @@
+{
+  "entry_url": "http://127.0.0.1:8000/legacy",
+  "goal": "Look up member [REDACTED] and return the current savings balance. Extract the balance using the output name 'current_savings_balance'.",
+  "message": "Discovery completed successfully.",
+  "model": "gemini-2.5-flash",
+  "outputs": {
+    "current_savings_balance": "[REDACTED]"
+  },
+  "provider": "gemini",
+  "run_id": "disc_22b2281984ae",
+  "status": "completed",
+  "steps": [
+    {
+      "action": {
+        "action": "fill",
+        "output_name": null,
+        "reason": "Fill the Member ID field with the provided member ID.",
+        "risk_hint": "safe",
+        "success_condition": null,
+        "target": {
+          "description": "Member ID textbox",
+          "locators": [
+            {
+              "description": "Member ID textbox",
+              "exact": true,
+              "frame_hint": null,
+              "kind": "role",
+              "name": "Member ID",
+              "reference_text": null,
+              "relation": null,
+              "role": "textbox",
+              "value": null
+            }
+          ]
+        },
+        "value": "[REDACTED]"
+      },
+      "extracted_output_name": null,
+      "extracted_output_value": null,
+      "policy_evaluation": {
+        "decision": "allow",
+        "matched_phrase": null,
+        "reason": "Action satisfies global runtime policy.",
+        "risk_level": "safe"
+      },
+      "resolved_target": {
+        "aria_label": null,
+        "href": null,
+        "name": "Member ID",
+        "placeholder": null,
+        "role": "textbox",
+        "tag": "input",
+        "text": null
+      },
+      "step_index": 1,
+      "success_condition_passed": null,
+      "url_after": "http://127.0.0.1:8000/legacy",
+      "url_before": "http://127.0.0.1:8000/legacy"
+    },
+    {
+      "action": {
+        "action": "click",
+        "output_name": null,
+        "reason": "Click the 'Search' button to look up member [REDACTED].",
+        "risk_hint": "safe",
+        "success_condition": null,
+        "target": {
+          "description": "Search button",
+          "locators": [
+            {
+              "description": "Search button",
+              "exact": true,
+              "frame_hint": null,
+              "kind": "role",
+              "name": "Search",
+              "reference_text": null,
+              "relation": null,
+              "role": "button",
+              "value": null
+            }
+          ]
+        },
+        "value": null
+      },
+      "extracted_output_name": null,
+      "extracted_output_value": null,
+      "policy_evaluation": {
+        "decision": "allow",
+        "matched_phrase": null,
+        "reason": "Action satisfies global runtime policy.",
+        "risk_level": "safe"
+      },
+      "resolved_target": {
+        "aria_label": null,
+        "href": null,
+        "name": "Search",
+        "placeholder": null,
+        "role": "button",
+        "tag": "button",
+        "text": "Search"
+      },
+      "step_index": 2,
+      "success_condition_passed": null,
+      "url_after": "http://127.0.0.1:8000/legacy/member/[REDACTED]",
+      "url_before": "http://127.0.0.1:8000/legacy"
+    },
+    {
+      "action": {
+        "action": "click",
+        "output_name": null,
+        "reason": "Click the 'Savings' link to view the savings account details for member [REDACTED].",
+        "risk_hint": "safe",
+        "success_condition": null,
+        "target": {
+          "description": "Savings link",
+          "locators": [
+            {
+              "description": "Savings link",
+              "exact": true,
+              "frame_hint": null,
+              "kind": "role",
+              "name": "Savings",
+              "reference_text": null,
+              "relation": null,
+              "role": "link",
+              "value": null
+            }
+          ]
+        },
+        "value": null
+      },
+      "extracted_output_name": null,
+      "extracted_output_value": null,
+      "policy_evaluation": {
+        "decision": "allow",
+        "matched_phrase": null,
+        "reason": "Action satisfies global runtime policy.",
+        "risk_level": "safe"
+      },
+      "resolved_target": {
+        "aria_label": null,
+        "href": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings",
+        "name": "Savings",
+        "placeholder": null,
+        "role": "link",
+        "tag": "a",
+        "text": "Savings"
+      },
+      "step_index": 3,
+      "success_condition_passed": null,
+      "url_after": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings",
+      "url_before": "http://127.0.0.1:8000/legacy/member/[REDACTED]"
+    },
+    {
+      "action": {
+        "action": "extract",
+        "output_name": "current_savings_balance",
+        "reason": "Extract the current savings balance from the 'Current Balance' field.",
+        "risk_hint": "safe",
+        "success_condition": null,
+        "target": {
+          "description": "Current Balance value",
+          "locators": [
+            {
+              "description": "Current Balance value",
+              "exact": true,
+              "frame_hint": null,
+              "kind": "relative_text",
+              "name": null,
+              "reference_text": "Current Balance",
+              "relation": "same_row",
+              "role": null,
+              "value": null
+            }
+          ]
+        },
+        "value": null
+      },
+      "extracted_output_name": "current_savings_balance",
+      "extracted_output_value": "[REDACTED]",
+      "policy_evaluation": {
+        "decision": "allow",
+        "matched_phrase": null,
+        "reason": "Action satisfies global runtime policy.",
+        "risk_level": "safe"
+      },
+      "resolved_target": {
+        "aria_label": null,
+        "href": null,
+        "name": "[REDACTED_AMOUNT]",
+        "placeholder": null,
+        "role": null,
+        "tag": "td",
+        "text": "[REDACTED_AMOUNT]"
+      },
+      "step_index": 4,
+      "success_condition_passed": null,
+      "url_after": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings",
+      "url_before": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings"
+    },
+    {
+      "action": {
+        "action": "complete",
+        "output_name": null,
+        "reason": "The current savings balance has been extracted, completing the goal.",
+        "risk_hint": "safe",
+        "success_condition": null,
+        "target": null,
+        "value": null
+      },
+      "extracted_output_name": null,
+      "extracted_output_value": null,
+      "policy_evaluation": {
+        "decision": "allow",
+        "matched_phrase": null,
+        "reason": "Current browser page is within the configured allowlist.",
+        "risk_level": "safe"
+      },
+      "resolved_target": null,
+      "step_index": 5,
+      "success_condition_passed": null,
+      "url_after": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings",
+      "url_before": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environment
+.venv/
+
+# Secrets
+.env
+
+# Runtime state
+intervention-state.json
+
+# Generated runtime evidence
+evidence/runtime/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/

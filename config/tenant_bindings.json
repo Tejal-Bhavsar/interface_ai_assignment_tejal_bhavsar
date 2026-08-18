@@ -1,0 +1,62 @@
+{
+    "schema_version": "1.0",
+    "bindings": [
+        {
+            "binding_id": "northstar-local-legacycore",
+            "tenant_id": "northstar-cu",
+            "application_key": "member-servicing",
+            "vendor_product": "legacycore-x",
+            "compatibility_key": "legacycore-x:v1",
+            "entry_url": "http://127.0.0.1:8000/legacy",
+            "enabled": true,
+            "drift_policy": "fail_closed",
+            "capabilities": [
+                {
+                    "capability_id": "lookup_savings_balance",
+                    "allowed_versions": [
+                        "1.0.0"
+                    ]
+                }
+            ],
+            "notes": "Synthetic Northstar deployment."
+        },
+        {
+            "binding_id": "harbor-local-legacycore",
+            "tenant_id": "harbor-cu",
+            "application_key": "member-servicing",
+            "vendor_product": "legacycore-x",
+            "compatibility_key": "legacycore-x:v1",
+            "entry_url": "http://localhost:8000/legacy",
+            "enabled": true,
+            "drift_policy": "fail_closed",
+            "capabilities": [
+                {
+                    "capability_id": "lookup_savings_balance",
+                    "allowed_versions": [
+                        "1.0.0"
+                    ]
+                }
+            ],
+            "notes": "Second synthetic tenant binding in the same vendor compatibility family."
+        },
+        {
+            "binding_id": "future-v2-legacycore",
+            "tenant_id": "future-cu",
+            "application_key": "member-servicing",
+            "vendor_product": "legacycore-x",
+            "compatibility_key": "legacycore-x:v2",
+            "entry_url": "http://localhost:8000/legacy",
+            "enabled": true,
+            "drift_policy": "fail_closed",
+            "capabilities": [
+                {
+                    "capability_id": "lookup_savings_balance",
+                    "allowed_versions": [
+                        "2.0.0"
+                    ]
+                }
+            ],
+            "notes": "Intentional incompatible version fixture."
+        }
+    ]
+}

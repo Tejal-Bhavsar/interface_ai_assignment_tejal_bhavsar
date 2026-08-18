@@ -1,0 +1,79 @@
+{
+    "profiles": {
+        "legacycore-x": {
+            "vendor_family": "legacycore-x",
+            "profile_version": "1.0",
+            "description": "Runtime semantics for the synthetic LegacyCore X banking application.",
+            "business_outcomes": [
+                {
+                    "code": "MEMBER_NOT_FOUND",
+                    "description": "No member exists for the supplied identifier.",
+                    "condition": {
+                        "type": "text_present",
+                        "value": "Member not found",
+                        "timeout_ms": 1000
+                    }
+                }
+            ],
+            "recoveries": [
+                {
+                    "code": "TRANSIENT_BUSY",
+                    "description": "LegacyCore is temporarily busy and the page may succeed after a bounded retry.",
+                    "condition": {
+                        "type": "text_present",
+                        "value": "System temporarily busy",
+                        "timeout_ms": 1000
+                    },
+                    "strategy": "reload",
+                    "max_attempts": 1
+                },
+                {
+                    "code": "SESSION_EXPIRED",
+                    "description": "The LegacyCore session has expired and can be re-established for this demo by reloading.",
+                    "condition": {
+                        "type": "text_present",
+                        "value": "Session expired",
+                        "timeout_ms": 1000
+                    },
+                    "strategy": "reload",
+                    "max_attempts": 1
+                }
+            ],
+            "failures": [
+                {
+                    "code": "PERMISSION_DENIED",
+                    "description": "The current operator does not have permission to access the requested record.",
+                    "condition": {
+                        "type": "text_present",
+                        "value": "Permission denied",
+                        "timeout_ms": 1000
+                    },
+                    "category": "hard_failure",
+                    "escalate_to_human": false
+                },
+                {
+                    "code": "APPLICATION_ERROR",
+                    "description": "LegacyCore reported an unrecoverable application error.",
+                    "condition": {
+                        "type": "text_present",
+                        "value": "Application Error",
+                        "timeout_ms": 1000
+                    },
+                    "category": "hard_failure",
+                    "escalate_to_human": false
+                },
+                {
+                    "code": "SECURITY_VERIFICATION",
+                    "description": "LegacyCore requires an operator to complete security verification before automation may continue.",
+                    "condition": {
+                        "type": "text_present",
+                        "value": "Security verification required",
+                        "timeout_ms": 1000
+                    },
+                    "category": "hard_failure",
+                    "escalate_to_human": true
+                }
+            ]
+        }
+    }
+}

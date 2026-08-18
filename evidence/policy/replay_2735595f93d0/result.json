@@ -1,0 +1,32 @@
+{
+  "capability_id": "lookup_savings_balance",
+  "capability_version": "1.0.0",
+  "checkpoint_passed": false,
+  "failed_step_id": "step_01_click_primary_action",
+  "human_actions": [],
+  "human_intervention_count": 0,
+  "human_resume_attempt_count": 0,
+  "message": "Replay requires human intervention.",
+  "outputs": {},
+  "recovery_count": 0,
+  "runtime_state": {
+    "code": "POLICY_HUMAN_REQUIRED",
+    "kind": "human_required",
+    "matched_text": "open sub-account",
+    "message": "Risky action requires human review before execution.",
+    "recovery_action": null,
+    "recovery_attempt": 0,
+    "recovery_max_attempts": null
+  },
+  "status": "human_required",
+  "steps": [
+    {
+      "action": "click",
+      "message": "Risky action requires human review before execution.",
+      "output_name": null,
+      "status": "human_required",
+      "step_id": "step_01_click_primary_action",
+      "url": "http://127.0.0.1:8000/legacy/member/[REDACTED]/account/savings"
+    }
+  ]
+}

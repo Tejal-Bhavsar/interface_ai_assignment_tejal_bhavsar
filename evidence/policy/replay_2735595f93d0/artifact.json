@@ -1,0 +1,197 @@
+{
+  "business_outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Member not found"
+      },
+      "description": "No member exists for the supplied identifier."
+    }
+  ],
+  "checkpoint": {
+    "output_name": null,
+    "target": {
+      "description": "Primary action button",
+      "locators": [
+        {
+          "description": "Semantic button role/name",
+          "exact": true,
+          "frame_hint": null,
+          "kind": "role",
+          "name": "Open Sub-Account",
+          "reference_text": null,
+          "relation": null,
+          "role": "button",
+          "value": null
+        }
+      ]
+    },
+    "timeout_ms": 0,
+    "type": "element_present",
+    "value": null
+  },
+  "discovery": {
+    "discovered_at": "2026-08-18T01:26:06.520410Z",
+    "model": "gemini-2.5-flash",
+    "provider": "gemini",
+    "run_id": "disc_269bf4aeaca8",
+    "source_goal_template": "Look up member {{member_id}} and return the current savings balance. Extract the balance using the output name 'current_savings_balance'.",
+    "source_tenant": "demo-credit-union"
+  },
+  "failures": [
+    {
+      "category": "hard_failure",
+      "code": "PERMISSION_DENIED",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Permission denied"
+      },
+      "description": "The current operator does not have permission to access the requested record.",
+      "escalate_to_human": false
+    },
+    {
+      "category": "hard_failure",
+      "code": "APPLICATION_ERROR",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Application Error"
+      },
+      "description": "LegacyCore reported an unrecoverable application error.",
+      "escalate_to_human": false
+    },
+    {
+      "category": "hard_failure",
+      "code": "SECURITY_VERIFICATION",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Security verification required"
+      },
+      "description": "LegacyCore requires an operator to complete security verification before automation may continue.",
+      "escalate_to_human": true
+    }
+  ],
+  "identity": {
+    "approval_state": "draft",
+    "description": "Look up a member in LegacyCore X and return the member's current savings account balance.",
+    "id": "lookup_savings_balance",
+    "name": "Lookup Savings Balance",
+    "version": "1.0.0"
+  },
+  "inputs": {
+    "member_id": {
+      "description": "Member ID used to locate the member record.",
+      "required": true,
+      "sensitive": true,
+      "type": "string"
+    }
+  },
+  "integrity_sha256": "7c227165e6e02d727024031487258cc5d8f888ee792b1ae90866e8b839b2d72a",
+  "outputs": {
+    "current_savings_balance": {
+      "description": "Current balance of the member's savings account.",
+      "required": true,
+      "sensitive": true,
+      "type": "string"
+    }
+  },
+  "recoveries": [
+    {
+      "code": "TRANSIENT_BUSY",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "System temporarily busy"
+      },
+      "description": "LegacyCore is temporarily busy and the page may succeed after a bounded retry.",
+      "max_attempts": 1,
+      "strategy": "reload"
+    },
+    {
+      "code": "SESSION_EXPIRED",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Session expired"
+      },
+      "description": "The LegacyCore session has expired and can be re-established for this demo by reloading.",
+      "max_attempts": 1,
+      "strategy": "reload"
+    }
+  ],
+  "safety": {
+    "allowed_actions": [
+      "navigate",
+      "click",
+      "fill",
+      "select",
+      "extract",
+      "wait",
+      "assert"
+    ],
+    "allowed_origins": [
+      "http://127.0.0.1:8000",
+      "http://localhost:8000"
+    ],
+    "allowed_routes": [
+      "/legacy"
+    ],
+    "risky_action_mode": "require_human"
+  },
+  "schema_version": "1.0",
+  "steps": [
+    {
+      "action": "click",
+      "description": "Click the primary workflow action.",
+      "id": "step_01_click_primary_action",
+      "output_name": null,
+      "postconditions": [],
+      "preconditions": [],
+      "retry": {
+        "backoff_multiplier": 1.0,
+        "delay_ms": 500,
+        "max_attempts": 1
+      },
+      "risk_level": "safe",
+      "target": {
+        "description": "Primary action button",
+        "locators": [
+          {
+            "description": "Semantic button role/name",
+            "exact": true,
+            "frame_hint": null,
+            "kind": "role",
+            "name": "Open Sub-Account",
+            "reference_text": null,
+            "relation": null,
+            "role": "button",
+            "value": null
+          }
+        ]
+      },
+      "value": null
+    }
+  ],
+  "target": {
+    "application": "LegacyCore X",
+    "entry_point": "http://127.0.0.1:8000/legacy",
+    "surface_type": "web",
+    "vendor_family": "legacycore-x"
+  }
+}

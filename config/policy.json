@@ -1,0 +1,31 @@
+{
+    "schema_version": "1.0",
+    "allowed_origins": [
+        "http://127.0.0.1:8000",
+        "http://localhost:8000"
+    ],
+    "allowed_route_prefixes": [
+        "/legacy"
+    ],
+    "allowed_actions": [
+        "navigate",
+        "click",
+        "fill",
+        "select",
+        "extract",
+        "wait",
+        "assert"
+    ],
+    "risky_phrases": [
+        "open sub-account",
+        "approve",
+        "submit transaction"
+    ],
+    "blocked_phrases": [
+        "confirm open sub-account",
+        "delete account",
+        "close account",
+        "wire transfer"
+    ],
+    "risky_action_mode": "require_human"
+}

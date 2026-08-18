@@ -1,0 +1,77 @@
+{
+    "active_provider": "gemini",
+    "providers": {
+        "openai": {
+            "type": "openai",
+            "model": "gpt-5.6-terra",
+            "enabled": true,
+            "api_key_env": "OPENAI_API_KEY",
+            "base_url": null,
+            "timeout_seconds": 60,
+            "max_output_tokens": 1200,
+            "options": {
+                "reasoning_effort": "low"
+            }
+        },
+        "anthropic": {
+            "type": "anthropic",
+            "model": "claude-sonnet-5",
+            "enabled": true,
+            "api_key_env": "ANTHROPIC_API_KEY",
+            "base_url": null,
+            "timeout_seconds": 60,
+            "max_output_tokens": 1200,
+            "options": {}
+        },
+        "gemini": {
+            "type": "gemini",
+            "model": "gemini-2.5-flash",
+            "enabled": true,
+            "api_key_env": "GEMINI_API_KEY",
+            "base_url": null,
+            "timeout_seconds": 60,
+            "max_output_tokens": 1200,
+            "options": {}
+        },
+        "grok": {
+            "type": "grok",
+            "model": "grok-4.6",
+            "enabled": true,
+            "api_key_env": "XAI_API_KEY",
+            "base_url": "https://api.x.ai/v1",
+            "timeout_seconds": 60,
+            "max_output_tokens": 1200,
+            "options": {}
+        },
+        "ollama": {
+            "type": "ollama",
+            "model": "llama3.2",
+            "enabled": true,
+            "api_key_env": null,
+            "base_url": "http://127.0.0.1:11434",
+            "timeout_seconds": 120,
+            "max_output_tokens": 1200,
+            "options": {}
+        },
+        "vllm": {
+            "type": "openai_compatible",
+            "model": "local-model",
+            "enabled": false,
+            "api_key_env": null,
+            "base_url": "http://127.0.0.1:8001/v1",
+            "timeout_seconds": 120,
+            "max_output_tokens": 1200,
+            "options": {}
+        },
+        "mock": {
+            "type": "mock",
+            "model": "mock",
+            "enabled": true,
+            "api_key_env": null,
+            "base_url": null,
+            "timeout_seconds": 10,
+            "max_output_tokens": 1200,
+            "options": {}
+        }
+    }
+}

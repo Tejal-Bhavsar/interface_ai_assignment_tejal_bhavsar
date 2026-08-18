@@ -1,0 +1,275 @@
+{
+  "business_outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Member not found"
+      },
+      "description": "No member exists for the supplied identifier."
+    }
+  ],
+  "checkpoint": {
+    "output_name": "current_savings_balance",
+    "target": null,
+    "timeout_ms": 0,
+    "type": "output_exists",
+    "value": null
+  },
+  "discovery": {
+    "discovered_at": "2026-08-18T20:58:36.175347Z",
+    "model": "gemini-2.5-flash",
+    "provider": "gemini",
+    "run_id": "disc_22b2281984ae",
+    "source_goal_template": "Look up member {{member_id}} and return the current savings balance. Extract the balance using the output name 'current_savings_balance'.",
+    "source_tenant": "demo-credit-union"
+  },
+  "failures": [
+    {
+      "category": "hard_failure",
+      "code": "PERMISSION_DENIED",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Permission denied"
+      },
+      "description": "The current operator does not have permission to access the requested record.",
+      "escalate_to_human": false
+    },
+    {
+      "category": "hard_failure",
+      "code": "APPLICATION_ERROR",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Application Error"
+      },
+      "description": "LegacyCore reported an unrecoverable application error.",
+      "escalate_to_human": false
+    },
+    {
+      "category": "hard_failure",
+      "code": "SECURITY_VERIFICATION",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Security verification required"
+      },
+      "description": "LegacyCore requires an operator to complete security verification before automation may continue.",
+      "escalate_to_human": true
+    }
+  ],
+  "identity": {
+    "approval_state": "draft",
+    "description": "Look up a member in LegacyCore X and return the member's current savings account balance.",
+    "id": "lookup_savings_balance",
+    "name": "Lookup Savings Balance",
+    "version": "1.0.0"
+  },
+  "inputs": {
+    "member_id": {
+      "description": "Member ID used to locate the member record.",
+      "required": true,
+      "sensitive": true,
+      "type": "string"
+    }
+  },
+  "integrity_sha256": "cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5",
+  "outputs": {
+    "current_savings_balance": {
+      "description": "Current balance of the member's savings account.",
+      "required": true,
+      "sensitive": true,
+      "type": "string"
+    }
+  },
+  "recoveries": [
+    {
+      "code": "TRANSIENT_BUSY",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "System temporarily busy"
+      },
+      "description": "LegacyCore is temporarily busy and the page may succeed after a bounded retry.",
+      "max_attempts": 1,
+      "strategy": "reload"
+    },
+    {
+      "code": "SESSION_EXPIRED",
+      "condition": {
+        "output_name": null,
+        "target": null,
+        "timeout_ms": 1000,
+        "type": "text_present",
+        "value": "Session expired"
+      },
+      "description": "The LegacyCore session has expired and can be re-established for this demo by reloading.",
+      "max_attempts": 1,
+      "strategy": "reload"
+    }
+  ],
+  "safety": {
+    "allowed_actions": [
+      "navigate",
+      "click",
+      "fill",
+      "select",
+      "extract",
+      "wait",
+      "assert"
+    ],
+    "allowed_origins": [
+      "http://127.0.0.1:8000",
+      "http://localhost:8000"
+    ],
+    "allowed_routes": [
+      "/legacy"
+    ],
+    "risky_action_mode": "require_human"
+  },
+  "schema_version": "1.0",
+  "steps": [
+    {
+      "action": "fill",
+      "description": "Fill the Member ID field with the provided member ID.",
+      "id": "step_01_fill_member_id_textbox",
+      "output_name": null,
+      "postconditions": [],
+      "preconditions": [],
+      "retry": {
+        "backoff_multiplier": 1.0,
+        "delay_ms": 500,
+        "max_attempts": 1
+      },
+      "risk_level": "safe",
+      "target": {
+        "description": "Member ID textbox",
+        "locators": [
+          {
+            "description": "Member ID textbox",
+            "exact": true,
+            "frame_hint": null,
+            "kind": "role",
+            "name": "Member ID",
+            "reference_text": null,
+            "relation": null,
+            "role": "textbox",
+            "value": null
+          }
+        ]
+      },
+      "value": "{{member_id}}"
+    },
+    {
+      "action": "click",
+      "description": "Click the 'Search' button to look up member {{member_id}}.",
+      "id": "step_02_click_search_button",
+      "output_name": null,
+      "postconditions": [],
+      "preconditions": [],
+      "retry": {
+        "backoff_multiplier": 1.0,
+        "delay_ms": 500,
+        "max_attempts": 1
+      },
+      "risk_level": "safe",
+      "target": {
+        "description": "Search button",
+        "locators": [
+          {
+            "description": "Search button",
+            "exact": true,
+            "frame_hint": null,
+            "kind": "role",
+            "name": "Search",
+            "reference_text": null,
+            "relation": null,
+            "role": "button",
+            "value": null
+          }
+        ]
+      },
+      "value": null
+    },
+    {
+      "action": "click",
+      "description": "Click the 'Savings' link to view the savings account details for member {{member_id}}.",
+      "id": "step_03_click_savings_link",
+      "output_name": null,
+      "postconditions": [],
+      "preconditions": [],
+      "retry": {
+        "backoff_multiplier": 1.0,
+        "delay_ms": 500,
+        "max_attempts": 1
+      },
+      "risk_level": "safe",
+      "target": {
+        "description": "Savings link",
+        "locators": [
+          {
+            "description": "Savings link",
+            "exact": true,
+            "frame_hint": null,
+            "kind": "role",
+            "name": "Savings",
+            "reference_text": null,
+            "relation": null,
+            "role": "link",
+            "value": null
+          }
+        ]
+      },
+      "value": null
+    },
+    {
+      "action": "extract",
+      "description": "Extract the current savings balance from the 'Current Balance' field.",
+      "id": "step_04_extract_current_savings_balance",
+      "output_name": "current_savings_balance",
+      "postconditions": [],
+      "preconditions": [],
+      "retry": {
+        "backoff_multiplier": 1.0,
+        "delay_ms": 500,
+        "max_attempts": 1
+      },
+      "risk_level": "safe",
+      "target": {
+        "description": "Current Balance value",
+        "locators": [
+          {
+            "description": "Current Balance value",
+            "exact": true,
+            "frame_hint": null,
+            "kind": "relative_text",
+            "name": null,
+            "reference_text": "Current Balance",
+            "relation": "same_row",
+            "role": null,
+            "value": null
+          }
+        ]
+      },
+      "value": null
+    }
+  ],
+  "target": {
+    "application": "LegacyCore X",
+    "entry_point": "http://127.0.0.1:8000/legacy",
+    "surface_type": "web",
+    "vendor_family": "legacycore-x"
+  }
+}

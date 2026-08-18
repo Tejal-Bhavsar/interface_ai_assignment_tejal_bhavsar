@@ -1,0 +1,215 @@
+<!DOCTYPE html><html><head>
+
+        <title>Account Details</title>
+
+        <style>
+
+            body {
+                font-family: Arial, sans-serif;
+                background: #dedede;
+                margin: 0;
+            }
+
+            .top {
+                background: #173b65;
+                color: white;
+                padding: 10px;
+                font-weight: bold;
+            }
+
+            .shell {
+                width: 930px;
+                margin: 14px auto;
+                background: #f5f2e8;
+                border: 2px solid #777;
+                padding: 12px;
+            }
+
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            td,
+            th {
+                border: 1px solid #888;
+                padding: 8px;
+                text-align: left;
+            }
+
+            th {
+                background: #d6d2c4;
+            }
+
+            .nav {
+                background: #c7c2b4;
+                padding: 8px;
+                margin-bottom: 12px;
+            }
+
+            .error {
+                border: 2px solid #a00;
+                background: #fee;
+                padding: 15px;
+            }
+
+            .warn {
+                border: 2px solid #b77700;
+                background: #fff4ce;
+                padding: 15px;
+            }
+
+            button,
+            input,
+            select {
+                font: inherit;
+                padding: 5px;
+            }
+
+            .modal {
+                position: fixed;
+                inset: 0;
+                background: #0008;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modalbox {
+                width: 520px;
+                background: white;
+                border: 4px solid #b77700;
+                padding: 25px;
+            }
+
+            .small {
+                font-size: 12px;
+                color: #555;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div class="top">
+            NORTHSTAR CREDIT UNION — LEGACYCORE X
+        </div>
+
+        <div class="shell">
+
+            <div class="nav">
+                Accounts &gt; Member Servicing
+                &nbsp; | &nbsp;
+                System: DEMO
+            </div>
+
+            
+
+        <h2>
+            Account Details
+        </h2>
+
+
+        <table>
+
+            <tbody><tr>
+
+                <th>
+                    Account Type
+                </th>
+
+                <td>
+                    Savings
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <th>
+                    Current Balance
+                </th>
+
+                <td data-sensitive="true">[REDACTED]</td>
+
+            </tr>
+
+
+            <tr>
+
+                <th>
+                    Status
+                </th>
+
+                <td>
+                    Open
+                </td>
+
+            </tr>
+
+        </tbody></table>
+
+
+        <p>
+
+            <a href="/legacy/member/[REDACTED]">
+                Back to Member
+            </a>
+
+        </p>
+
+
+        <form method="get" action="/legacy/member/[REDACTED]/open-subaccount">
+
+            <button type="submit">
+                Open Sub-Account
+            </button>
+
+        </form>
+
+
+        
+
+        <div class="modal" id="security-modal">
+
+            <div class="modalbox">
+
+                <h2>
+                    Security verification required
+                </h2>
+
+                <p>
+                    This exceptional state requires
+                    operator acknowledgement.
+                </p>
+
+                <button onclick="
+                        document
+                            .getElementById('security-modal')
+                            .remove()
+                    ">
+                    Acknowledge &amp; Continue
+                </button>
+
+            </div>
+
+        </div>
+        
+    
+
+            <hr>
+
+            <div class="small">
+                Synthetic training data only.
+            </div>
+
+        </div>
+
+    
+
+    
+    </body></html>
