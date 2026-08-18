@@ -1,763 +1,430 @@
-Computer-Use Automation System
+# Computer-Use Automation System
 
-interface.ai Take-Home — End-to-End Computer-Use Automation for Legacy Applications
+> **LLM-driven discovery. Typed capability compilation. Deterministic replay.**
+>
+> A focused implementation of a computer-use automation layer for legacy applications that do not expose APIs.
 
-This repository implements a small but real version of the backend integration layer required to let AI agents operate applications that do not expose APIs.
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![Playwright](https://img.shields.io/badge/Browser-Playwright-2EAD33?logo=playwright&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-120%20passed-brightgreen)
+![Status](https://img.shields.io/badge/status-complete-success)
 
-The core idea is intentionally simple:
+This project implements the full record-once / replay-many workflow requested in the **interface.ai Computer-Use Automation take-home**.
 
-The model discovers. The artifact becomes a reusable capability. Deterministic replay is how the capability is invoked in production.
+The core idea is:
 
-The implementation demonstrates that full thread against a synthetic banking application called LegacyCore X:
+> **The model discovers. The artifact becomes a reusable capability. Deterministic replay is how an AI agent invokes it in production.**
 
-Natural-language goal
-        |
-        v
-Genuine LLM discovery
-observe -> decide -> act
-        |
-        v
-Successful discovery result
-        |
-        v
-Capability compiler
-        |
-        v
-Typed + versioned + parameterized artifact
-        |
-        v
-Deterministic ReplayEngine
-(no LLM decisions)
-        |
-        +------------------------------+
-        |              |               |
-        v              v               v
-     success      business outcome   recoverable
-                                      / failure
-                                         |
-                                         v
-                                  human intervention
-                                  when required
+The concrete demo target is **LegacyCore X**, a synthetic banking back-office application built to resemble a stable but imperfect legacy enterprise UI. All member names, IDs, balances, failures, and account data in the repository are synthetic.
 
-The solution also adds production-oriented seams for configurable policy enforcement, redacted evidence, same-session human handoff, multi-tenant binding, and an optional agent-facing capability API.
+---
 
-All names, member IDs, balances, application errors, and account data in LegacyCore X are synthetic demonstration data.
+## Table of contents
 
-1. Assignment coverage at a glance
+- [What this system does](#what-this-system-does)
+- [End-to-end flow](#end-to-end-flow)
+- [Assignment coverage](#assignment-coverage)
+- [Quick start](#quick-start)
+- [Run the full demo](#run-the-full-demo)
+- [Architecture](#architecture)
+- [Capability artifact](#capability-artifact)
+- [Deterministic replay](#deterministic-replay)
+- [Runtime outcomes and recovery](#runtime-outcomes-and-recovery)
+- [Safety and policy](#safety-and-policy)
+- [Sensitive-data handling](#sensitive-data-handling)
+- [Human-in-the-loop handoff](#human-in-the-loop-handoff)
+- [Multi-tenant design](#multi-tenant-design)
+- [Agent-facing capability API](#agent-facing-capability-api)
+- [Evidence](#evidence)
+- [Tests](#tests)
+- [Repository structure](#repository-structure)
+- [Design trade-offs](#design-trade-offs)
+- [Known limitations](#known-limitations)
+- [What I would build next](#what-i-would-build-next)
 
-Assignment requirement
+---
 
-Implementation
+## What this system does
 
-Main proof
+The system takes a natural-language goal for a target application, uses an LLM to accomplish it once against the live UI, converts that successful run into a reusable typed capability, and then executes that capability deterministically on later invocations.
 
-Goal + target input
+For the example capability:
 
-DiscoveryEngine.run(goal, entry_url)
+```text
+Goal:
+Look up a member and return the current savings balance.
 
-Genuine discovery run
+Discovery:
+Gemini observes and operates the live LegacyCore UI.
 
-Real LLM observe -> decide -> act loop
+Compiled capability:
+lookup_savings_balance@1.0.0
 
-cua/discovery.py + PlaywrightSurface + provider layer
+Runtime input:
+member_id
 
-evidence/final/01_discovery/
-
-Real UI interaction
-
-Playwright implementation of ComputerSurface
-
-Discovery + replay evidence
-
-Typed reusable artifact
-
-CapabilityArtifact / compiler
-
-capabilities/lookup_savings_balance.v1.json
-
-Parameterized inputs
-
-{{member_id}} compiler substitution
-
-Saved artifact
-
-Typed outputs
-
+Runtime output:
 current_savings_balance
 
-Saved artifact/API contract
+Production execution:
+ReplayEngine follows the saved capability with zero LLM decisions.
+```
+
+The implementation also covers:
+
+- semantic/contextual target resolution,
+- typed inputs and outputs,
+- artifact integrity verification,
+- checkpoint validation,
+- business outcomes,
+- bounded deterministic recovery,
+- hard failures,
+- configurable policy allowlists,
+- risky/irreversible action handling,
+- sensitive-data redaction,
+- structured evidence,
+- same-session human takeover and resume,
+- tenant/application compatibility,
+- and an agent-facing capability API.
+
+---
+
+## End-to-end flow
+
+```text
+             ┌───────────────────────────────┐
+             │ Natural-language goal + URL   │
+             └──────────────┬────────────────┘
+                            │
+                            ▼
+             ┌───────────────────────────────┐
+             │ Genuine LLM discovery         │
+             │ observe → decide → act        │
+             └──────────────┬────────────────┘
+                            │
+                            ▼
+             ┌───────────────────────────────┐
+             │ Successful DiscoveryRunResult │
+             └──────────────┬────────────────┘
+                            │
+                            ▼
+             ┌───────────────────────────────┐
+             │ CapabilityCompiler            │
+             │ parameterize + validate       │
+             └──────────────┬────────────────┘
+                            │
+                            ▼
+             ┌───────────────────────────────┐
+             │ CapabilityArtifact            │
+             │ typed + versioned + reviewable│
+             └──────────────┬────────────────┘
+                            │
+                            ▼
+             ┌───────────────────────────────┐
+             │ Deterministic ReplayEngine    │
+             │ NO LLM decisions              │
+             └──────────────┬────────────────┘
+                            │
+                 ┌──────────┼───────────┐
+                 │          │           │
+                 ▼          ▼           ▼
+             completed   business     recoverable /
+                         outcome      hard failure
+                                        │
+                                        ▼
+                                  human intervention
+                                  when required
+```
+
+---
+
+## Assignment coverage
+
+| Requirement | Implementation | Proof |
+|---|---|---|
+| Goal + target input | `DiscoveryEngine.run(goal, entry_url)` | discovery evidence |
+| Genuine LLM loop | observe → decide → act with live provider | `evidence/final/01_discovery/` |
+| Real UI interaction | `PlaywrightSurface` | discovery/replay evidence |
+| Typed reusable artifact | `CapabilityArtifact` | canonical JSON artifact |
+| Parameterized inputs | `{{member_id}}` | compiled capability |
+| Typed outputs | `current_savings_balance` | artifact/API contract |
+| Stable targeting | role/name/label/text/relative locators | surface tests |
+| Versioned/reviewable capability | identity + schema + approval state | artifact |
+| Deterministic replay | `ReplayEngine` | replay evidence |
+| Checkpoint | `OUTPUT_EXISTS(current_savings_balance)` | successful replay |
+| Business outcome | `MEMBER_NOT_FOUND` | final evidence |
+| Recoverable conditions | session/busy reload rules | final evidence |
+| Hard failures | permission/app failures | screenshot + sanitized HTML |
+| Explicit allowlist | `PolicyEngine` + `policy.json` | policy evidence |
+| Risky/irreversible handling | human-required / blocked | policy tests |
+| Data redaction | typed sensitivity + recursive sanitization | redaction tests |
+| Structured observability | JSON + JSONL evidence | `evidence/` |
+| Rich failure signal | masked PNG + sanitized structure | failure evidence |
+| Human escalation | `InterventionRequest` | handoff evidence |
+| Same-session takeover | same `Page` + `BrowserContext` | manual handoff proof |
+| Human actions recorded | Playwright browser instrumentation | handoff evidence |
+| Multi-tenant design | `TenantBindingRegistry` | tenancy tests |
+| Surface abstraction | `ComputerSurface` | architecture |
+| Agent-facing interface | FastAPI capability catalog/invocation | API evidence |
+| Approval seam | draft blocked by default | replay/catalog tests |
+| Final evidence bundle | audited + lineage-aware | `evidence/final/` |
+| Automated validation | full pytest suite | **120 passed** |
 
-Stable target identification
+---
 
-semantic/contextual locator candidates
+# Quick start
 
-Artifact + Playwright tests
+## Prerequisites
 
-Versioning / reviewability
+- Python **3.11+**
+- Playwright Chromium
+- A live model API key only if you want to perform a **new genuine discovery**
 
-capability id/version/schema/approval state
+The saved capability, deterministic replay, evidence inspection, mock-provider checks, and most tests do not require a live model service.
 
-Saved artifact
+## 1. Create the environment
 
-Deterministic replay
-
-ReplayEngine has no LLM decision dependency
-
-replay evidence
-
-Checkpoint verification
-
-OUTPUT_EXISTS(current_savings_balance)
-
-successful replay
-
-Business outcome
-
-MEMBER_NOT_FOUND
-
-final evidence
-
-Recoverable runtime condition
-
-session/transient recovery rules
-
-final evidence
-
-Hard failure
-
-permission/app-error handling
-
-screenshot + sanitized HTML
-
-Safety allowlists
-
-PolicyEngine + config/policy.json
-
-policy evidence
-
-Risky/irreversible handling
-
-human-required / blocked
-
-policy tests/evidence
-
-Sensitive-data redaction
-
-typed sensitivity + evidence sanitization
-
-redaction tests/final bundle
-
-Structured observability
-
-JSON/JSONL evidence
-
-evidence/
-
-Rich failure signal
-
-masked screenshot + sanitized structure
-
-failure evidence
-
-Human escalation
-
-InterventionRequest + ownership state machine
-
-manual handoff evidence
-
-Same live session takeover
-
-same Playwright Page + BrowserContext
-
-handoff smoke proof
-
-Human actions recorded
-
-browser event capture
-
-handoff evidence
-
-Multi-tenant design
-
-TenantBindingRegistry
-
-tenancy tests
-
-Surface heterogeneity design
-
-ComputerSurface abstraction
-
-design/report
-
-Optional agent-facing capability interface
-
-FastAPI capability catalog + invoke endpoint
-
-API smoke/evidence
-
-Approval gate
-
-draft capabilities blocked by default
-
-catalog/replay tests
-
-Final evidence bundle
-
-audited, redacted, lineage-aware curation
-
-evidence/final/
-
-Test coverage
-
-full pytest suite
-
-120 passed
-
-2. What was built
-
-The system is a modular monolith. I intentionally did not split the take-home into distributed workers, queues, services, or orchestration infrastructure because those do not improve the correctness of the core vertical slice.
-
-The main modules are:
-
-apps/
-├── server.py
-│   Synthetic LegacyCore X target application
-│
-└── capability_api.py
-    Agent-facing capability catalog/invocation API
-
-capabilities/
-└── lookup_savings_balance.v1.json
-    Canonical reusable capability artifact
-
-config/
-├── llm.json
-│   Provider/model configuration
-├── app_profiles.json
-│   Business outcome / recovery / failure semantics
-├── policy.json
-│   Deployment-level allowlists and risky/blocked phrases
-└── tenant_bindings.json
-    Tenant/application compatibility mappings
-
-cua/
-├── models.py
-│   Core typed schemas
-├── surface.py
-│   Surface abstraction
-├── playwright_surface.py
-│   Browser implementation
-├── discovery.py
-│   LLM-driven discovery engine
-├── discovery_evidence.py
-│   Privacy-aware discovery evidence
-├── compiler.py
-│   Discovery -> capability compilation
-├── replay.py
-│   Deterministic production execution path
-├── profiles.py
-│   Application profile loader
-├── policy.py
-│   Runtime policy engine
-├── redaction.py
-│   Recursive sensitive-data redaction
-├── evidence.py
-│   Replay evidence recorder
-├── handoff.py
-│   Human intervention contracts/state
-├── playwright_handoff.py
-│   Same-session browser handoff
-├── tenancy.py
-│   Multi-tenant binding layer
-├── capability_catalog.py
-│   Versioned capability discovery
-├── capability_service.py
-│   Typed agent invocation service
-├── evidence_bundle.py
-│   Evidence audit/final curation
-└── llm/
-    Provider-agnostic LLM layer
-
-scripts/
-├── smoke_playwright.py
-├── smoke_llm.py
-├── smoke_discovery.py
-├── smoke_compile.py
-├── smoke_compile_offline.py
-├── smoke_replay.py
-├── smoke_replay_runtime.py
-├── smoke_evidence.py
-├── smoke_handoff.py
-├── smoke_tenancy.py
-├── smoke_capability_api.py
-├── smoke_policy.py
-└── consolidate_evidence.py
-
-tests/
-└── 120 automated tests across the implementation
-
-evidence/
-├── discovery/
-├── replay/
-├── policy/
-├── agent_api/
-└── final/
-
-3. Concrete demo application: LegacyCore X
-
-apps/server.py exposes a deliberately old-style synthetic banking application.
-
-The UI is intentionally closer to enterprise back-office software than a polished consumer application:
-
-server-rendered forms,
-
-tables,
-
-limited machine-friendly identifiers,
-
-navigation between account pages,
-
-runtime error screens,
-
-transient states,
-
-an exceptional security modal,
-
-a risky "Open Sub-Account" flow.
-
-The application is stable enough to make a record-once/replay-many architecture realistic, while still containing the kinds of runtime conditions that matter in production.
-
-Synthetic cases include:
-
-Input
-
-Behavior
-
-normal known member
-
-happy-path checking/savings navigation
-
-unknown member
-
-business outcome: MEMBER_NOT_FOUND
-
-recovery member
-
-first request exposes session expiry, deterministic reload succeeds
-
-transient-busy member
-
-first request exposes busy state, deterministic reload succeeds
-
-permission-denied input
-
-hard failure
-
-application-error input
-
-hard failure
-
-security-challenge member
-
-requires same-session human acknowledgement
-
-open-sub-account page
-
-risky/blocked policy demonstrations
-
-4. Architecture
-
-4.1 Surface boundary
-
-ComputerSurface defines the automation contract independently from Playwright.
-
-Conceptually it exposes operations for:
-
-start / close
-navigate / reload
-observe
-resolve target
-fill / click / select
-extract
-assert / wait
-capture screenshot
-capture structural snapshot
-
-PlaywrightSurface is only one implementation.
-
-This matters because the target environment may eventually include:
-
-modern web
-legacy web
-frames / nested tables
-remote desktop
-native desktop
-accessibility-tree automation
-image/coordinate automation
-
-The discovery/compiler/replay contracts should not have to change just because the physical interaction backend changes.
-
-4.2 Discovery boundary
-
-DiscoveryEngine is the only place where a model is allowed to decide what to do next.
-
-It receives:
-
-goal
-entry URL
-surface
-LLM provider
-policy
-step limit
-
-and repeatedly performs:
-
-OBSERVE live state
-       ↓
-ASK LLM for one typed action
-       ↓
-RESOLVE proposed live target
-       ↓
-CHECK policy
-       ↓
-ACT
-       ↓
-OBSERVE again
-
-Stopping conditions include:
-
-goal completed,
-
-model requests human intervention,
-
-policy blocks/requires human,
-
-target cannot be uniquely resolved,
-
-action fails,
-
-success condition fails,
-
-maximum step count.
-
-4.3 Compilation boundary
-
-Discovery is exploratory; production replay should not be.
-
-The compiler therefore does not save the raw model transcript as automation.
-
-Instead it converts a successful discovery result into a smaller production contract:
-
-discovery result
-      ↓
-remove discovery-only COMPLETE action
-      ↓
-parameterize concrete invocation values
-      ↓
-canonicalize targets
-      ↓
-attach typed inputs / outputs
-      ↓
-attach application runtime semantics
-      ↓
-attach checkpoint
-      ↓
-attach safety metadata
-      ↓
-attach discovery provenance
-      ↓
-validate no sensitive runtime leakage
-      ↓
-compute integrity SHA-256
-      ↓
-CapabilityArtifact
-
-4.4 Replay boundary
-
-ReplayEngine intentionally contains no model-decision dependency.
-
-Its inputs are:
-
-saved artifact
-typed runtime inputs
-tenant/deployment entry URL
-surface
-policy
-optional evidence recorder
-optional human-handoff handler
-
-The replay engine follows only the saved contract.
-
-4.5 Policy boundary
-
-Capability safety answers:
-
-What was this capability reviewed/designed to do?
-
-Runtime policy answers:
-
-What is this deployment allowed to do right now?
-
-Both must allow execution.
-
-4.6 Evidence boundary
-
-Evidence recording is passive.
-
-It records what happened but never decides what should happen next.
-
-This keeps observability from becoming part of the control plane.
-
-5. Setup
-
-5.1 Prerequisites
-
-Recommended:
-
-Python 3.11+
-Playwright Chromium
-
-The final project was validated locally on Python 3.14.4.
-
-5.2 Create a virtual environment
-
+```bash
 python -m venv .venv
 source .venv/bin/activate
+```
 
-5.3 Install Python dependencies
+## 2. Install dependencies
 
+```bash
 python -m pip install -r requirements.txt
+```
 
-5.4 Install Chromium for Playwright
+## 3. Install Chromium
 
+```bash
 python -m playwright install chromium
+```
 
-6. Configuration
+## 4. Start LegacyCore X
 
-Configuration is intentionally kept outside the automation code.
-
-6.1 config/llm.json
-
-Controls available model providers and models.
-
-Implemented adapters include:
-
-mock
-OpenAI
-Anthropic
-Gemini
-Grok
-Ollama
-OpenAI-compatible endpoints
-
-Select a provider with:
-
-export CUA_LLM_PROVIDER=gemini
-
-For a live provider, also export the API-key environment variable named by that provider's api_key_env field in config/llm.json.
-
-The final genuine discovery proof in this repository uses:
-
-provider: gemini
-model: gemini-2.5-flash
-
-6.2 config/app_profiles.json
-
-Contains reusable application-runtime semantics.
-
-For LegacyCore, rules classify states such as:
-
-MEMBER_NOT_FOUND
-SESSION_EXPIRED
-TRANSIENT_BUSY
-PERMISSION_DENIED
-APPLICATION_ERROR
-SECURITY_VERIFICATION
-
-Rules are compiled into the capability so replay understands expected application behavior without asking a model.
-
-6.3 config/policy.json
-
-The global runtime policy contains:
-
-allowed origins
-allowed route prefixes
-allowed action types
-risky phrases
-blocked phrases
-risky action mode
-
-Important design choice:
-
-Policy checks the actual resolved live element metadata, not only an LLM/artifact description.
-
-This prevents a benign target description from hiding a dangerous live button.
-
-6.4 config/tenant_bindings.json
-
-Tenant bindings separate reusable logic from deployment configuration.
-
-The artifact says:
-
-HOW to look up the savings balance
-
-The binding says:
-
-WHERE this artifact may run
-WHICH vendor/version it is compatible with
-WHICH artifact versions are approved
-
-7. Exact end-to-end demo path
-
-This is the shortest reviewer path through the assignment.
-
-Terminal 1 — run LegacyCore X
-
-source .venv/bin/activate
-
+```bash
 python -m uvicorn apps.server:app \
   --host 127.0.0.1 \
   --port 8000
+```
 
-Target:
+Open:
 
+```text
 http://127.0.0.1:8000/legacy
+```
 
-Terminal 2 — genuine LLM discovery + compilation
+---
 
-Configure a live provider.
+# Run the full demo
 
-Example:
+The assignment's main workflow can be demonstrated with two commands after the target server is running.
 
+## A. Genuine LLM discovery → capability compilation
+
+In another terminal:
+
+```bash
 source .venv/bin/activate
 
 export CUA_LLM_PROVIDER=gemini
 
 python -m scripts.smoke_compile
+```
+
+Also export the API-key environment variable configured for the selected provider in `config/llm.json`.
 
 This command performs:
 
-natural-language goal
-       ↓
-real browser observation
-       ↓
-Gemini decision
-       ↓
+```text
+goal
+  ↓
+live browser observation
+  ↓
+LLM chooses one typed action
+  ↓
 live target resolution
-       ↓
+  ↓
 policy evaluation
-       ↓
+  ↓
 browser action
-       ↓
-repeat until complete
-       ↓
-persist redacted discovery evidence
-       ↓
-compile capability
-       ↓
-verify no concrete runtime data leaked
-       ↓
-compute artifact integrity SHA
-       ↓
-save capability
+  ↓
+repeat
+  ↓
+successful discovery
+  ↓
+redacted discovery evidence
+  ↓
+capability compilation
+  ↓
+integrity verification
+  ↓
+saved capability
+```
 
-Successful output creates:
+Output artifact:
 
+```text
 capabilities/lookup_savings_balance.v1.json
+```
 
-and:
+Discovery evidence:
 
+```text
 evidence/discovery/disc_<run-id>/
+```
 
-Terminal 2 — deterministic replay
+## B. Deterministic replay — no LLM
 
-Keep LegacyCore running.
+Keep LegacyCore running:
 
+```bash
 python -m scripts.smoke_replay
+```
 
-This executes the resulting artifact without LLM decisions.
+Replay uses the saved artifact and runtime inputs. It does **not** ask a model what to do.
 
-8. Genuine discovery proof
+---
 
-The final canonical discovery included in the evidence bundle is:
+# Architecture
 
+The project is intentionally a **modular monolith**.
+
+That keeps the take-home small while still exposing the architectural seams that would matter in a production system.
+
+```text
+┌───────────────────────┐
+│      LLM Provider     │
+│ Gemini/OpenAI/etc.    │
+└──────────┬────────────┘
+           │ discovery only
+           ▼
+┌───────────────────────┐
+│    DiscoveryEngine    │
+└──────────┬────────────┘
+           │
+           ▼
+┌───────────────────────┐
+│    ComputerSurface    │◄──────── PlaywrightSurface
+└──────────┬────────────┘
+           │
+           ▼
+┌───────────────────────┐
+│  CapabilityCompiler   │
+└──────────┬────────────┘
+           │
+           ▼
+┌───────────────────────┐
+│  CapabilityArtifact   │
+└──────────┬────────────┘
+           │
+           ▼
+┌───────────────────────┐
+│      ReplayEngine     │
+│   deterministic only  │
+└───────┬───────┬───────┘
+        │       │
+        │       ├──────── PolicyEngine
+        │
+        ├──────────────── EvidenceRecorder
+        │
+        └──────────────── HumanHandoff
+```
+
+## Main boundaries
+
+### `ComputerSurface`
+
+Abstracts the interaction medium away from the automation logic.
+
+Current implementation:
+
+```text
+ComputerSurface
+      ↓
+PlaywrightSurface
+```
+
+Future implementations could use:
+
+```text
+accessibility APIs
+native desktop automation
+remote desktop
+screenshots + coordinates
+OCR / vision-based targeting
+```
+
+### `DiscoveryEngine`
+
+The only production component allowed to use an LLM for action decisions.
+
+### `CapabilityCompiler`
+
+Converts a successful exploratory run into a strict reusable contract.
+
+### `ReplayEngine`
+
+Executes only the saved contract.
+
+### `PolicyEngine`
+
+Applies deployment-level safety rules independently from artifact-level safety.
+
+### Evidence recorders
+
+Observe and persist what happened but never choose the next action.
+
+---
+
+# Genuine discovery
+
+The final canonical discovery included in the repository is:
+
+```text
 run_id:   disc_22b2281984ae
 provider: gemini
 model:    gemini-2.5-flash
 status:   completed
+```
 
-The model discovered this flow against the live browser:
+The live model discovered:
 
-1. FILL Member ID textbox
-2. CLICK Search
-3. CLICK Savings
-4. EXTRACT Current Balance using same-row contextual targeting
+```text
+1. FILL    Member ID textbox
+2. CLICK   Search
+3. CLICK   Savings
+4. EXTRACT Current Balance using same-row context
 5. COMPLETE
+```
 
-The discovered reusable operations were compiled to four capability steps because COMPLETE is a discovery control-flow action, not a production browser operation.
+The compiled artifact contains four executable steps because `COMPLETE` is discovery control flow rather than a reusable browser operation.
 
-The canonical compiled artifact has:
+The discovery evidence includes events such as:
 
-capability id: lookup_savings_balance
-version:       1.0.0
-schema:        1.0
-approval:      draft
-input:         member_id
-output:        current_savings_balance
-steps:         4
+```text
+discovery_started
+policy_evaluated
+observation
+llm_decision
+target_resolved
+action_executed
+...
+discovery_finished
+```
 
-Artifact integrity SHA-256:
+Raw page text and sensitive runtime values are not persisted.
 
-cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5
+---
 
-9. Goal-driven discovery loop
+# Target resolution
 
-The LLM provider returns a typed AgentAction, not arbitrary executable code.
+A target is represented by a `TargetDescriptor` containing ordered `LocatorCandidate`s.
 
-Supported action semantics include:
+Supported locator kinds include:
 
-NAVIGATE
-CLICK
-FILL
-SELECT
-EXTRACT
-WAIT
-ASSERT
-COMPLETE
-REQUEST_HUMAN
-
-A proposed action can contain:
-
-action type
-reason
-target descriptor
-value
-output name
-success condition
-risk hint
-
-Before an action executes:
-
-the target is resolved against the live surface,
-
-ambiguity is rejected,
-
-current URL is policy-checked,
-
-the actual resolved target is policy-checked,
-
-an explicit destination URL is checked when known,
-
-only then is the action executed.
-
-This avoids treating model output as trusted automation.
-
-10. Locator and target strategy
-
-A TargetDescriptor contains an ordered set of LocatorCandidates.
-
-Supported kinds include:
-
+```text
 ROLE
 LABEL
 TEXT
@@ -765,680 +432,480 @@ PLACEHOLDER
 RELATIVE_TEXT
 CSS
 XPATH
+```
 
-The implementation prefers semantic/contextual strategies.
+The implementation prefers semantic/contextual locators.
 
-Examples from the saved capability:
+The canonical capability uses:
 
-Member ID textbox:
-role=textbox + accessible name "Member ID"
+| Target | Strategy |
+|---|---|
+| Member ID | role=`textbox`, name=`Member ID` |
+| Search | role=`button`, name=`Search` |
+| Savings | role=`link`, name=`Savings` |
+| Balance | reference=`Current Balance`, relation=`same_row` |
 
-Search:
-role=button + name "Search"
+The extracted balance is **not** located using the concrete discovered balance text because that value changes on every invocation.
 
-Savings:
-role=link + name "Savings"
+## Ambiguity policy
 
-Balance:
-reference text "Current Balance"
-relation same_row
+A candidate must uniquely resolve.
 
-The final extraction does not locate the concrete discovered balance value.
+The engine does not silently call `.first()` when multiple elements match.
 
-That value changes per member and therefore would be a brittle locator.
+```text
+0 matches     → try next declared candidate / fail
+1 match       → use it
+>1 matches    → fail closed
+```
 
-Ambiguity handling
+---
 
-The resolver does not use .first() as a silent escape hatch.
+# Capability artifact
 
-A candidate must resolve uniquely.
+The artifact is a **contract**, not a recorded transcript.
 
-If multiple controls match, the action fails closed.
+The canonical capability is:
 
-Fallback order
+```text
+id:             lookup_savings_balance
+version:        1.0.0
+schema_version: 1.0
+approval_state: draft
 
-A target may contain multiple locator candidates.
+input:
+  member_id
 
-Replay attempts them in declared order, but each candidate still has to satisfy uniqueness.
+output:
+  current_savings_balance
 
-11. Capability artifact design
+steps:
+  4
+```
 
-The artifact is a production contract, not an execution transcript.
+Its current integrity SHA-256 is:
 
-Major fields include:
+```text
+cd2a9e2e522df917c914b5e1d1eb1f312ed171268f95b2dce8f976b82f50a6f5
+```
 
-schema_version
-
-identity
-  id
-  name
-  version
-  description
-  approval_state
-
-target
-
-inputs
-outputs
-
-steps
-
-business_outcomes
-recoveries
-failures
-
-checkpoint
-safety
-
-discovery
-  run_id
-  provider
-  model
-  source tenant
-  source goal template
-
-integrity_sha256
-
-Typed inputs
-
-Example:
-
-member_id: string, sensitive
-
-The concrete discovery value is parameterized:
-
-1001
-  ↓
-{{member_id}}
-
-Typed outputs
-
-Example:
-
-current_savings_balance: string, sensitive
-
-The actual discovery balance is not stored in the reusable artifact.
-
-Ordered steps
-
-Each production step contains:
-
-step id
-description
-action
-target
-runtime value/template
-output name
-preconditions
-postconditions
-risk level
-
-Checkpoint
-
-The example capability uses:
-
-OUTPUT_EXISTS(current_savings_balance)
-
-Replay is not successful merely because all clicks completed; the declared capability outcome must exist.
-
-Provenance
-
-The artifact keeps the discovery run/provider/model so a reviewer can connect the saved automation to the real discovery evidence.
-
-Integrity
-
-The compiler computes a SHA-256 over canonical artifact content.
-
-Replay verifies integrity before execution.
-
-12. Compiler safety decisions
-
-The compiler fails closed when the discovery cannot be converted safely.
-
-Examples include:
-
-discovery did not complete
-no reusable steps
-declared input was never used
-dynamic extracted runtime text is being turned into a locator
-expected output contract changed
-sensitive discovery values would remain in the artifact
-artifact integrity cannot be validated
-
-This is a deliberate separation of concerns:
-
-LLM discovery may be flexible
-        |
-        v
-compiler is strict
-        |
-        v
-replay receives only reviewed structure
-
-13. Deterministic replay
-
-Replay does not re-ask the model how to perform the task.
+## Artifact contents
 
 Conceptually:
 
-load artifact
-    ↓
+```text
+CapabilityArtifact
+├── schema_version
+├── identity
+│   ├── id
+│   ├── name
+│   ├── version
+│   ├── description
+│   └── approval_state
+├── target
+├── inputs
+├── outputs
+├── steps
+├── business_outcomes
+├── recoveries
+├── failures
+├── checkpoint
+├── safety
+├── discovery provenance
+└── integrity_sha256
+```
+
+## Parameterization
+
+The discovery value:
+
+```text
+1001
+```
+
+becomes:
+
+```text
+{{member_id}}
+```
+
+The concrete discovered balance is also excluded from the artifact.
+
+## Compiler fail-closed checks
+
+Compilation is rejected when, for example:
+
+- discovery did not complete,
+- no reusable operation exists,
+- a declared input is unused,
+- a dynamic extracted value would become a brittle locator,
+- an expected output contract changes,
+- sensitive runtime values would leak into the artifact.
+
+---
+
+# Deterministic replay
+
+Replay deliberately has **no LLM decision loop**.
+
+```text
+load capability
+      ↓
 verify integrity
-    ↓
-enforce approval state
-    ↓
-validate input names/types
-    ↓
-bind {{placeholders}}
-    ↓
-validate artifact-level action safety
-    ↓
+      ↓
+check approval
+      ↓
+validate typed inputs
+      ↓
+bind placeholders
+      ↓
+validate artifact safety
+      ↓
 check runtime policy
-    ↓
-resolve target deterministically
-    ↓
-execute action
-    ↓
+      ↓
+resolve target
+      ↓
+execute deterministic step
+      ↓
 classify runtime state
-    ↓
-bounded recovery / outcome / failure / human
-    ↓
+      ↓
+recover / stop / continue
+      ↓
 verify checkpoint
-    ↓
-return typed result
+      ↓
+return structured result
+```
 
-Draft behavior
+## Replay status
 
-The saved demonstration capability is intentionally still draft.
+Caller-visible status is one of:
 
-By default:
-
-draft capability -> not callable
-
-Smoke scripts can explicitly opt in to demonstrate the vertical slice.
-
-This gives the schema a real approval seam instead of claiming every generated artifact is production-approved.
-
-14. Replay result contract and error taxonomy
-
-Caller-visible statuses are:
-
+```text
 COMPLETED
 BUSINESS_OUTCOME
 FAILED
 HUMAN_REQUIRED
+```
 
-Runtime states are classified as:
+A replay is not considered successful merely because every click happened.
 
-NORMAL
-BUSINESS_OUTCOME
-RECOVERABLE
-HARD_FAILURE
-HUMAN_REQUIRED
+The declared checkpoint must also pass.
 
-This prevents all non-happy-path situations from collapsing into a generic exception.
+Canonical checkpoint:
 
-Business outcome
+```text
+OUTPUT_EXISTS(current_savings_balance)
+```
 
-Example:
+---
 
-MEMBER_NOT_FOUND
+# Runtime outcomes and recovery
 
-A nonexistent member is a legitimate result the caller needs to know, not a system crash.
+LegacyCore intentionally includes runtime conditions that are more interesting than simple selector drift.
 
-Recoverable conditions
+| State | Classification | Behavior |
+|---|---|---|
+| valid member | normal | continue |
+| member missing | business outcome | return to caller |
+| session expired | recoverable | bounded reload |
+| transient busy | recoverable | bounded reload |
+| permission denied | hard failure | stop |
+| application error | hard failure | stop |
+| security verification | human required | hand off |
 
-Examples:
+## Why separate business outcomes?
 
-SESSION_EXPIRED
-TRANSIENT_BUSY
+`MEMBER_NOT_FOUND` is not an automation crash.
 
-Recovery is deterministic and bounded.
+It is a valid domain result that an upstream agent needs to know.
 
-For the synthetic application, the configured strategy is reload with a maximum attempt count.
+## Why bound recovery?
 
-Replay never retries forever.
+Every recovery rule has a maximum number of attempts.
 
-Hard failures
+The system cannot retry indefinitely.
 
-Examples:
+---
 
-PERMISSION_DENIED
-APPLICATION_ERROR
+# Safety and policy
 
-Replay stops and surfaces a structured failure including the failed step and runtime state.
+Safety is intentionally layered.
 
-Human-required state
+## Artifact safety
 
-Example:
+The capability describes the action/risk envelope it was designed and reviewed for.
 
-SECURITY_VERIFICATION
+## Deployment policy
 
-This routes into the human intervention mechanism.
+`config/policy.json` independently controls:
 
-15. Runtime classification precedence
+- allowed origins,
+- allowed route prefixes,
+- allowed action types,
+- risky phrases,
+- blocked phrases,
+- risky-action handling.
 
-The classifier is deliberately fail-closed.
+## Live-target policy checks
 
-Conceptually:
+Policy evaluates the **actual resolved live control**.
 
-failure / human-required
-        ↓
-recoverable
-        ↓
-business outcome
-        ↓
-normal
+For example:
 
-A known severe state must not accidentally be hidden by a lower-priority match.
-
-16. Safety and policy guardrails
-
-Safety is layered.
-
-Layer 1 — artifact safety contract
-
-The artifact declares which actions and risk levels belong to the reviewed capability.
-
-Replay cannot simply ignore this contract.
-
-Layer 2 — deployment policy
-
-PolicyEngine independently evaluates:
-
-current URL
-destination URL
-action allowlist
-target description
-actual resolved element metadata
-risk level
-configured blocked phrases
-configured risky phrases
-post-action URL
-
-URL containment
-
-Origins are matched exactly.
-
-Route prefixes use path-boundary logic.
-
-Therefore:
-
-/legacy/member/1001    allowed
-/legacyevil            blocked
-/legacy-evil           blocked
-
-when /legacy is the configured route prefix.
-
-Live-target enforcement
-
-Policy evaluates metadata from the element actually found in the live browser, including available:
-
-tag
-role
-text
-accessible name
-aria label
-placeholder
-href
-
-This protects against a case such as:
-
-description from artifact/model:
+```text
+artifact description:
 "Continue"
 
 actual live button:
 "Confirm Open Sub-Account"
+```
 
-The live blocked operation wins.
+The live target wins.
 
-Risk handling
+## Risk behavior
 
-Current behavior is conservative:
-
-SAFE              -> may execute if otherwise allowed
-RISKY             -> HUMAN_REQUIRED (configurable mode)
-IRREVERSIBLE      -> BLOCK
-blocked phrase    -> BLOCK
+```text
+SAFE         → may execute if allowed
+RISKY        → HUMAN_REQUIRED
+IRREVERSIBLE → BLOCK
+blocked text → BLOCK
+```
 
 Blocked phrases take precedence over generic risky handling.
 
-Post-action containment
+## URL containment
 
-After browser actions/recovery navigation, the resulting live URL is checked again.
+Checks occur:
 
-This protects against unexpected redirects.
+1. before initial navigation,
+2. before known external destinations,
+3. after browser actions/recovery.
 
-17. Sensitive-data handling
+Route matching uses path boundaries so an allowlist for:
 
-This is a financial-domain system, so evidence is designed around the assumption that UI state can contain regulated data.
+```text
+/legacy
+```
 
-Typed sensitivity
+does not accidentally permit:
 
-Inputs and outputs can be explicitly marked sensitive.
+```text
+/legacy-evil
+```
 
-Example:
+---
 
-member_id                  sensitive
-current_savings_balance    sensitive
+# Sensitive-data handling
 
-Artifact protection
+The system assumes UI state may contain regulated financial data.
 
-Concrete discovery-time inputs and outputs are rejected from the reusable artifact.
+## Typed sensitive fields
 
-Replay evidence
+Examples:
 
-Replay evidence redacts:
+```text
+member_id
+current_savings_balance
+```
 
-sensitive input values
-sensitive output values
-known runtime secrets
-sensitive member IDs embedded in URLs
-sensitive query parameters
+are marked sensitive.
 
-Screenshots
+## Artifact protection
 
-The browser surface masks:
+Concrete discovery-time sensitive values are not embedded in the reusable capability.
 
+## Replay evidence
+
+The evidence layer redacts:
+
+- sensitive input values,
+- sensitive outputs,
+- known runtime values,
+- member IDs in URLs,
+- sensitive query parameters.
+
+## Screenshot protection
+
+Before persistence, elements marked:
+
+```css
 [data-sensitive=true]
+```
 
-before failure screenshots are persisted.
+are masked.
 
-Structural snapshots
+## Discovery evidence
 
-HTML/structure evidence is sanitized rather than stored verbatim.
+Discovery evidence intentionally avoids persisting:
 
-Discovery evidence
+```text
+raw visible page text
+raw LLM responses
+concrete fill values
+concrete extracted balances
+```
 
-Discovery evidence intentionally does not persist raw visible page text or raw LLM responses.
+Instead it stores safe proof such as:
 
-It persists safer proof signals such as:
-
+```text
 provider + model
-observation URL/title after sanitization
-control summaries without input values
-control count
-visible-text character count
-ARIA-snapshot character count
-observation SHA-256 fingerprint
-LLM-decided typed action
-resolved live target metadata
-policy evaluation
-action execution
-final status
+sanitized URL/title
+control metadata
+character counts
+observation fingerprint
+typed LLM decision
+resolved target metadata
+policy decision
+execution event
+terminal status
+```
 
-FILL values and extracted outputs are redacted.
+---
 
-This provides evidence that discovery really occurred without turning the evidence directory into a store of raw financial UI content.
+# Human-in-the-loop handoff
 
-18. Evidence and observability
+The handoff mechanism is implemented as a real ownership transition.
 
-Replay run layout:
+Demonstrated case:
 
-evidence/replay/replay_<id>/
-├── metadata.json
-├── artifact.json
-├── events.jsonl
-├── result.json
-├── failure_<step>.png      # when applicable
-└── failure_<step>.html     # when applicable
-
-Discovery run layout:
-
-evidence/discovery/disc_<id>/
-├── metadata.json
-├── events.jsonl
-└── result.json
-
-The structured event stream records enough information to answer:
-
-what happened?
-which step?
-why?
-what policy decision was made?
-was recovery attempted?
-did a human take control?
-what was the terminal result?
-
-Failure screenshot/structure evidence gives a richer debugging signal than JSON alone.
-
-19. Human-in-the-loop escalation and same-session handoff
-
-The human handoff implementation is not a placeholder.
-
-The demonstrated runtime case is:
-
-lookup member
-      ↓
-open Savings
-      ↓
-LegacyCore security modal
-      ↓
-SECURITY_VERIFICATION detected
-      ↓
+```text
+Savings page
+    ↓
+security verification appears
+    ↓
+SECURITY_VERIFICATION
+    ↓
 automation pauses
-      ↓
+    ↓
 InterventionRequest
-      ↓
-ownership = HUMAN
-      ↓
-human acts in SAME browser
-      ↓
-human requests resume
-      ↓
+    ↓
+ownership → HUMAN
+    ↓
+operator uses SAME browser
+    ↓
+operator acknowledges modal
+    ↓
+operator requests resume
+    ↓
 automation validates live state
-      ↓
-ownership = AUTOMATION
-      ↓
+    ↓
+ownership → AUTOMATION
+    ↓
 replay continues
+```
 
-Intervention context
+## Same session
 
-The request includes enough information for the operator to understand the stop:
+The exact existing Playwright:
 
-intervention ID
-capability
-step
-reason
-message
-live URL
-resume attempt
-
-Same live session
-
-The handoff preserves the exact:
-
-Playwright Page
+```text
+Page
 BrowserContext
+```
 
-The operator is instructed to use the already-open browser rather than opening a new one.
+are preserved.
 
-Human action capture
+A fresh browser is not created.
 
-Browser interaction capture records sanitized human actions across the handoff.
+## Human actions
 
-The final manual proof recorded:
+Human actions are captured in sanitized form.
 
+The final manual proof records:
+
+```text
 click: Acknowledge & Continue
+```
 
-Resume is validated
+## Resume is not automatic
 
-Pressing Enter is only:
+Pressing Enter only requests resume.
 
-REQUEST RESUME
+Automation first verifies:
 
-not:
+- current URL remains allowed,
+- blocker has disappeared,
+- runtime state is acceptable,
+- next-step conditions are satisfied,
+- next target uniquely resolves.
 
-AUTOMATICALLY GIVE CONTROL BACK
+Only then is automation allowed to take ownership again.
 
-Before replay resumes, automation validates:
+---
 
-current URL is still allowed
-blocking state is gone
-runtime state is acceptable
-next preconditions are valid
-next target can resolve uniquely
+# Multi-tenant design
 
-Resume attempts are bounded.
+Capability logic is separated from deployment configuration.
 
-20. Handoff limitation
-
-There are currently two escalation sources:
-
-runtime HUMAN_REQUIRED
-policy HUMAN_REQUIRED
-
-The real same-session handoff path is fully implemented for runtime application states such as SECURITY_VERIFICATION.
-
-A policy-produced HUMAN_REQUIRED currently returns a structured terminal replay result before the risky action instead of automatically entering the persistent same-session API handoff flow.
-
-This is documented intentionally rather than hidden.
-
-A production next step would route both sources through one intervention/ownership service.
-
-21. Multi-tenant design
-
-The same automation logic should not be rebuilt separately for every institution using the same vendor application.
-
-The design therefore separates:
-
+```text
 Capability = HOW
 Binding    = WHERE
+```
 
-Example conceptual binding:
+A binding can define:
 
-tenant: northstar-cu
-application: member-servicing
-vendor product: legacycore-x
-compatibility: legacycore-x:v1
-entry URL: tenant-specific
-allowed capability versions: [...]
+```text
+tenant ID
+application key
+entry URL
+vendor product
+compatibility key
+enabled state
+approved capability versions
+```
 
-The tenancy tests prove:
+The same artifact can be bound to multiple compatible institutions without mutation.
 
-same artifact -> two compatible tenant bindings
-unknown tenant -> fail closed
-incompatible vendor/version -> fail closed
-binding -> does not mutate artifact
+The tenancy layer fails closed when:
 
-A tenant running an incompatible future application version is rejected rather than optimistically reusing the automation.
+- the tenant is unknown,
+- the application binding does not exist,
+- the vendor/version is incompatible,
+- the binding is disabled.
 
-22. Heterogeneous surface design
+---
 
-Only a browser surface is implemented because this is a focused vertical slice.
+# Agent-facing capability API
 
-The abstraction is intentionally broader.
+The project implements the optional capability-interface stretch goal.
 
-A future desktop surface could map the same concepts:
+FastAPI endpoints include:
 
-Capability concept
-
-Web implementation
-
-Desktop/remote equivalent
-
-observe
-
-DOM/accessibility snapshot
-
-accessibility tree/screenshot
-
-role locator
-
-ARIA role
-
-accessibility role/control type
-
-label
-
-form label
-
-accessibility name
-
-relative text
-
-table/DOM relationship
-
-visual/accessibility relationship
-
-click
-
-Playwright click
-
-OS/accessibility click
-
-fill
-
-Playwright fill
-
-keyboard/accessibility value
-
-screenshot
-
-page screenshot
-
-desktop capture
-
-structure snapshot
-
-sanitized HTML
-
-accessibility-tree snapshot
-
-The artifact remains semantic; only the surface resolver/executor changes.
-
-23. Agent-facing capability interface — stretch goal
-
-The repository implements one optional stretch goal deeply: an agent-facing capability interface.
-
-apps/capability_api.py exposes a small FastAPI catalog.
-
-Endpoints include:
-
+```text
 GET  /health
 GET  /v1/capabilities
 GET  /v1/capabilities/{capability_id}?version=...
 POST /v1/capabilities/{capability_id}/invoke
+```
 
-A calling agent supplies:
+## Start the API
 
-capability version
-tenant ID
-application key
-typed arguments
+Terminal 1:
 
-The service performs:
-
-catalog lookup
-exact version lookup
-approval validation
-tenant/application binding
-compatibility validation
-deterministic replay
-evidence creation
-structured result
-
-Start the API
-
-LegacyCore:
-
+```bash
 python -m uvicorn apps.server:app \
   --host 127.0.0.1 \
   --port 8000
+```
 
-Capability API:
+Terminal 2:
 
+```bash
 CUA_ALLOW_DRAFT_CAPABILITIES=1 \
 python -m uvicorn apps.capability_api:app \
   --host 127.0.0.1 \
   --port 8011
+```
 
-Discover capabilities
+## Discover capabilities
 
+```bash
 curl http://127.0.0.1:8011/v1/capabilities
+```
 
-Invoke the capability
+## Invoke
 
+```bash
 curl -X POST \
   http://127.0.0.1:8011/v1/capabilities/lookup_savings_balance/invoke \
   -H 'Content-Type: application/json' \
@@ -1450,123 +917,40 @@ curl -X POST \
       "member_id": "1002"
     }
   }'
+```
 
-A smoke script exercises the same path:
+The service performs exact capability/version lookup, tenant compatibility checks, deterministic replay, and evidence generation.
 
-python -m scripts.smoke_capability_api
+---
 
-24. Approval seam
+# Running without a live model
 
-The artifact schema contains:
+A live model is required only to create a **new discovery**.
 
-draft
-approved
+Existing saved capabilities can be replayed offline from model providers:
 
-The final demonstration artifact is intentionally draft.
-
-The catalog can expose it for inspection, but unattended invocation is disabled by default.
-
-The smoke environment explicitly enables draft execution:
-
-CUA_ALLOW_DRAFT_CAPABILITIES=1
-
-This is a narrow implementation of the assignment's confidence/approval direction without pretending to implement a full approval service.
-
-25. Running without a live model service
-
-A live model is required only to create a new genuine discovery run.
-
-The saved capability can be replayed without a live LLM.
-
-Start LegacyCore:
-
-python -m uvicorn apps.server:app \
-  --host 127.0.0.1 \
-  --port 8000
-
-Then:
-
+```bash
 python -m scripts.smoke_replay
+```
 
-The provider abstraction can also be tested locally with:
+The provider abstraction can also be tested without an external service:
 
+```bash
 CUA_LLM_PROVIDER=mock \
 python -m scripts.smoke_llm
+```
 
-Most automated tests use mocks/fakes and do not need external model access.
+---
 
-26. Useful demo commands
+# Evidence
 
-Surface
+The final reviewer-facing bundle is:
 
-python -m scripts.smoke_playwright
-
-LLM provider contract
-
-CUA_LLM_PROVIDER=mock \
-python -m scripts.smoke_llm
-
-Genuine discovery only
-
-CUA_LLM_PROVIDER=gemini \
-python -m scripts.smoke_discovery
-
-Genuine discovery + compile
-
-CUA_LLM_PROVIDER=gemini \
-python -m scripts.smoke_compile
-
-Deterministic replay
-
-python -m scripts.smoke_replay
-
-Runtime taxonomy
-
-python -m scripts.smoke_replay_runtime
-
-Evidence
-
-python -m scripts.smoke_evidence
-
-Real manual handoff
-
-python -m scripts.smoke_handoff
-
-Scripted regression handoff
-
-python -m scripts.smoke_handoff --auto
-
-The --auto version is test/regression support; it is not the final human proof.
-
-Multi-tenant binding
-
-python -m scripts.smoke_tenancy
-
-Agent-facing capability API
-
-python -m scripts.smoke_capability_api
-
-Runtime policy
-
-python -m scripts.smoke_policy
-
-Final evidence audit
-
-python -m scripts.consolidate_evidence --audit-only
-
-Build curated final evidence
-
-python -m scripts.consolidate_evidence
-
-27. Final evidence bundle
-
-The reviewer-facing bundle is:
-
+```text
 evidence/final/
 ├── README.md
 ├── manifest.json
 ├── checksums.sha256
-│
 ├── 01_discovery/
 ├── 02_artifact/
 ├── 03_replay_success/
@@ -1576,228 +960,325 @@ evidence/final/
 ├── 07_human_handoff/
 ├── 08_policy/
 └── 09_agent_api/
+```
 
-The final selected proof is:
+## Selected final proof
 
-Category
+| Category | Run |
+|---|---|
+| Genuine discovery | `disc_22b2281984ae` |
+| Successful replay | `replay_b5da39f38b05` |
+| Business outcome | `replay_4647a6ff59f6` |
+| Recovery | `replay_b4775e61a9d5` |
+| Hard failure | `replay_530635599c3d` |
+| Real manual handoff | `replay_2d8ca6b9db94` |
+| Runtime policy | `replay_7999ad388fd5` |
+| Agent API | `replay_acf52073349e` |
 
-Selected run
+## Audit the evidence
 
-Genuine discovery
+```bash
+python -m scripts.consolidate_evidence --audit-only
+```
 
-disc_22b2281984ae
+## Rebuild the curated bundle
 
-Successful replay
+```bash
+python -m scripts.consolidate_evidence
+```
 
-replay_b5da39f38b05
+The bundler is non-destructive and checks:
 
-Business outcome
+- genuine non-mock discovery,
+- canonical artifact lineage,
+- required replay cases,
+- real manual handoff rather than scripted regression,
+- redaction,
+- final manifest,
+- final checksums.
 
-replay_4647a6ff59f6
+---
 
-Recoverable replay
+# Tests
 
-replay_b4775e61a9d5
+Run the full suite:
 
-Hard failure
-
-replay_530635599c3d
-
-Real manual handoff
-
-replay_2d8ca6b9db94
-
-Runtime policy
-
-replay_7999ad388fd5
-
-Agent API
-
-replay_acf52073349e
-
-The evidence bundler is deliberately non-destructive.
-
-It:
-
-finds the canonical discovery evidence
-requires a genuine non-mock provider
-selects replay evidence tied to the canonical artifact lineage
-requires a real manual handoff rather than scripted regression
-audits sensitive replay fields
-copies only curated proof
-generates manifest.json
-generates SHA-256 checksums
-leaves source evidence untouched
-
-28. Final genuine discovery evidence
-
-The final discovery evidence includes actual events such as:
-
-discovery_started
-policy_evaluated
-observation
-llm_decision
-target_resolved
-action_executed
-...
-discovery_finished
-
-It proves a genuine model was in the discovery loop while avoiding persistence of raw financial UI text.
-
-29. Test suite
-
-Run everything:
-
+```bash
 python -m pytest -v
+```
 
-Final validation:
+Current result:
 
+```text
 120 passed, 1 warning
+```
 
-The single warning is a third-party google-genai deprecation warning observed under Python 3.14 and does not represent a failing project test.
+The warning is a third-party `google-genai` deprecation warning under Python 3.14 and does not represent a failed project test.
 
-The suite covers:
+Coverage includes:
 
-capability catalog/API
-compiler safety
-discovery
-discovery evidence
-replay evidence
-final evidence bundling
-human handoff
-LLM normalization/providers
-typed models
-Playwright surface
-policy unit behavior
-policy/replay integration
-application profiles
-redaction
-replay taxonomy
-surface abstraction
-multi-tenant binding
+- typed models,
+- provider normalization/adapters,
+- discovery,
+- compiler safety,
+- deterministic replay,
+- runtime classification,
+- Playwright targeting,
+- policy,
+- redaction,
+- evidence,
+- handoff,
+- tenant binding,
+- capability catalog/API,
+- final evidence bundling.
 
-30. Important design decisions and trade-offs
+---
 
-LLM in discovery, not replay
+# Repository structure
 
-Decision: use model reasoning only to learn the task.
+<details>
+<summary><strong>Expand repository tree</strong></summary>
 
-Why: replay should be reliable, cheap, auditable, and predictable.
+```text
+.
+├── README.md
+├── REPORT.md
+├── requirements.txt
+├── pyproject.toml
+│
+├── apps/
+│   ├── server.py
+│   └── capability_api.py
+│
+├── capabilities/
+│   └── lookup_savings_balance.v1.json
+│
+├── config/
+│   ├── llm.json
+│   ├── app_profiles.json
+│   ├── policy.json
+│   └── tenant_bindings.json
+│
+├── cua/
+│   ├── models.py
+│   ├── surface.py
+│   ├── playwright_surface.py
+│   ├── discovery.py
+│   ├── discovery_evidence.py
+│   ├── compiler.py
+│   ├── replay.py
+│   ├── profiles.py
+│   ├── policy.py
+│   ├── redaction.py
+│   ├── evidence.py
+│   ├── handoff.py
+│   ├── playwright_handoff.py
+│   ├── tenancy.py
+│   ├── capability_catalog.py
+│   ├── capability_service.py
+│   ├── evidence_bundle.py
+│   └── llm/
+│
+├── scripts/
+│   ├── smoke_playwright.py
+│   ├── smoke_llm.py
+│   ├── smoke_discovery.py
+│   ├── smoke_compile.py
+│   ├── smoke_compile_offline.py
+│   ├── smoke_replay.py
+│   ├── smoke_replay_runtime.py
+│   ├── smoke_evidence.py
+│   ├── smoke_handoff.py
+│   ├── smoke_tenancy.py
+│   ├── smoke_capability_api.py
+│   ├── smoke_policy.py
+│   └── consolidate_evidence.py
+│
+├── tests/
+│
+└── evidence/
+    ├── discovery/
+    ├── replay/
+    ├── policy/
+    ├── agent_api/
+    └── final/
+```
 
-Trade-off: replay does not automatically reason around unknown UI drift.
+</details>
 
-Artifact, not transcript
+---
 
-Decision: compile a typed capability rather than replaying the model conversation.
+# Useful commands
 
-Why: exploration history and concrete runtime values are not a production contract.
+<details>
+<summary><strong>Expand smoke/demo commands</strong></summary>
 
-Trade-off: compiler design is more work but gives a much cleaner system boundary.
+### Browser surface
 
-Semantic targets over brittle selectors
+```bash
+python -m scripts.smoke_playwright
+```
 
-Decision: prefer role/label/text/context and reject ambiguity.
+### Mock LLM provider
 
-Why: generated CSS/XPath can be fragile and accidental.
+```bash
+CUA_LLM_PROVIDER=mock \
+python -m scripts.smoke_llm
+```
 
-Trade-off: some truly hostile surfaces will require image/accessibility/coordinate strategies.
+### Genuine discovery
 
-Embedded runtime semantics
+```bash
+CUA_LLM_PROVIDER=gemini \
+python -m scripts.smoke_discovery
+```
 
-Decision: business/recovery/failure rules are part of the reusable application capability.
+### Genuine discovery + compile
 
-Why: these are application semantics replay must understand deterministically.
+```bash
+CUA_LLM_PROVIDER=gemini \
+python -m scripts.smoke_compile
+```
 
-Trade-off: when vendor behavior changes materially, the capability/profile must be versioned.
+### Deterministic replay
 
-Global policy outside the artifact
+```bash
+python -m scripts.smoke_replay
+```
 
-Decision: deployment policy is separate from artifact safety.
+### Runtime taxonomy
 
-Why: institution-level restrictions can change independently of automation logic.
+```bash
+python -m scripts.smoke_replay_runtime
+```
 
-Fail closed
+### Evidence
 
-Decision: ambiguous target, bad input, incompatible tenant, integrity failure, unsafe action, or blocked navigation stops execution.
+```bash
+python -m scripts.smoke_evidence
+```
 
-Why: a financial automation system should not guess when the safety contract is unclear.
+### Real manual handoff
 
-Modular monolith
+```bash
+python -m scripts.smoke_handoff
+```
 
-Decision: one process/codebase with explicit interfaces.
+### Scripted handoff regression
 
-Why: the assignment evaluates judgment and a complete core flow, not distributed infrastructure.
+```bash
+python -m scripts.smoke_handoff --auto
+```
 
-31. What was deliberately not built
+### Tenant binding
 
-The following are deliberate cuts, not hidden TODOs:
+```bash
+python -m scripts.smoke_tenancy
+```
 
-native desktop ComputerSurface
-VNC/co-browsing operator product UI
-distributed automation workers
-queue/cluster orchestration
-persistent database-backed capability registry
-RBAC/SSO
-secret-manager integration
-full human approval product
-confidence scoring based on many production replays
-automatic LLM repair during deterministic replay
-large-scale drift telemetry
-cross-tenant override language
-multi-run flakiness scoring
-code-generation stretch goal
+### Agent-facing capability interface
 
-The architecture leaves seams for these without implementing them prematurely.
+```bash
+python -m scripts.smoke_capability_api
+```
 
-32. What I would build next
+### Runtime policy
 
-Priority order:
+```bash
+python -m scripts.smoke_policy
+```
 
-1. Unify policy HUMAN_REQUIRED with persistent same-session handoff
-2. Persistent capability/version/approval registry
-3. Second non-DOM ComputerSurface
-4. Tenant/vendor drift and compatibility telemetry
-5. Reviewed re-discovery/versioning workflow
-6. Multi-run reliability/confidence metrics
-7. Operator-facing intervention queue/UI
+</details>
 
-I would not make open-ended LLM recovery the default replay behavior.
+---
 
-If a reviewed capability becomes unsafe or ambiguous, stopping and creating a reviewed new version is preferable to silently re-introducing model reasoning into production execution.
+# Design trade-offs
 
-33. Submission checklist
+| Decision | Why | Trade-off |
+|---|---|---|
+| LLM only in discovery | predictable/cheap/auditable replay | no automatic reasoning around unknown drift |
+| Capability instead of transcript | clean reusable contract | requires strict compilation |
+| Semantic targets first | more stable than raw selectors | hostile UIs may require other surfaces |
+| Reject ambiguity | safer for financial automation | some recoverable cases stop earlier |
+| Embed app runtime semantics | deterministic error handling | profile/capability must evolve with vendor changes |
+| Separate global policy | deployment rules evolve independently | two safety layers to maintain |
+| Keep same browser for handoff | preserves real session state | requires session-aware operator flow |
+| Modular monolith | focuses effort on correctness | no distributed production runtime |
 
-Before submitting:
+---
 
-[ ] README.md exists at repo root
-[ ] REPORT.md exists at repo root
-[ ] capability artifact committed
-[ ] genuine discovery evidence committed
-[ ] deterministic replay evidence committed
-[ ] exceptional replay evidence committed
-[ ] manual same-session handoff evidence committed
-[ ] policy evidence committed
-[ ] evidence/final manifest and checksums committed
-[ ] no API keys/secrets committed
-[ ] pytest is green
-[ ] exact demo commands work from a fresh shell
-[ ] GitHub repository is public
+# Known limitations
 
-Current validated project state:
+The following are deliberate cuts, not hidden production claims:
 
-genuine discovery             ✅
-typed capability              ✅
-deterministic replay          ✅
-checkpoint                    ✅
-business outcome              ✅
-bounded recovery              ✅
-hard failure evidence         ✅
-same-session human handoff    ✅
-runtime policy                ✅
-redaction                     ✅
-multi-tenant design           ✅
-agent capability API          ✅
-final evidence bundle         ✅
-120 tests passing             ✅
+- only the browser `ComputerSurface` is implemented,
+- no VNC/co-browsing operator product,
+- no persistent database-backed capability registry,
+- no queue/worker/cluster infrastructure,
+- no RBAC/SSO,
+- no external secrets-manager integration,
+- no full approval workflow,
+- no automatic LLM repair during deterministic replay,
+- no fleet-scale drift telemetry,
+- no multi-run reliability score,
+- no code-generation stretch goal.
 
-For the architectural reasoning and trade-offs, see REPORT.md.
+One important integration limit:
+
+> Runtime `HUMAN_REQUIRED` is connected to the real same-session handoff flow. A policy-produced `HUMAN_REQUIRED` currently returns a structured terminal result before the risky action rather than entering the same persistent handoff channel automatically.
+
+That boundary is documented intentionally rather than hidden.
+
+---
+
+# What I would build next
+
+1. **Unify all human-required states** behind one durable intervention/session service.
+2. Add a persistent **capability/version/approval registry**.
+3. Implement a second, non-DOM `ComputerSurface`.
+4. Add vendor/tenant compatibility and drift telemetry.
+5. Add a reviewed re-discovery/versioning workflow.
+6. Add multi-run stability/confidence metrics.
+7. Build an operator-facing intervention queue/UI.
+
+I would keep the default replay path deterministic.
+
+If a reviewed capability becomes unsafe or ambiguous, the preferred behavior is:
+
+```text
+stop
+  ↓
+preserve evidence
+  ↓
+review / rediscover
+  ↓
+publish a new capability version
+```
+
+rather than silently putting an LLM back into production execution.
+
+---
+
+## Final project status
+
+```text
+Genuine LLM discovery            ✅
+Typed capability                 ✅
+Parameterized runtime input      ✅
+Typed output                     ✅
+Deterministic replay             ✅
+Checkpoint verification          ✅
+Business-outcome handling        ✅
+Bounded recovery                 ✅
+Hard-failure evidence            ✅
+Same-session manual handoff      ✅
+Human-action capture             ✅
+Runtime safety policy            ✅
+Sensitive-data redaction         ✅
+Multi-tenant binding             ✅
+Agent-facing capability API      ✅
+Curated final evidence bundle    ✅
+120 automated tests passing      ✅
+```
+
+For the detailed architectural reasoning and explicit cut lines, see **[`REPORT.md`](REPORT.md)**.
